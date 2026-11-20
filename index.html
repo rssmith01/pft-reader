@@ -1,0 +1,1391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PFT Clinical Fidelity v2.0.0-final — 2026-10-22</title>
+<style>
+:root{
+  --text-xs:0.75rem; --text-sm:0.8125rem; --text-base:0.9375rem; --text-lg:1.0625rem; --text-xl:1.25rem;
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-8:32px;
+  --bg:#eef0ee; --surface:#ffffff; --surface-2:#f6f7f5; --surface-3:#eceeeb;
+  --text:#1b2222; --muted:#5b6666; --faint:#98a2a1;
+  --border:rgba(24,44,44,.13); --border-strong:rgba(24,44,44,.24);
+  --accent:#0d5d6c; --accent-hover:#0a4a56; --accent-soft:#e3eeef; --accent-ink:#ffffff;
+  --warn:#8a5300; --warn-bg:#fbf1dc; --err:#9b2c2c; --err-bg:#f9e5e3; --ok:#2f6b3a;
+  --radius:8px; --radius-sm:5px;
+  --font:'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono:'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --shadow:0 1px 2px rgba(20,40,40,.06), 0 2px 8px rgba(20,40,40,.04);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#121616; --surface:#1a1f1f; --surface-2:#202626; --surface-3:#262d2d;
+    --text:#e2e8e7; --muted:#9aa6a5; --faint:#66706f;
+    --border:rgba(220,235,235,.10); --border-strong:rgba(220,235,235,.2);
+    --accent:#4fb3c4; --accent-hover:#6cc3d2; --accent-soft:#1d3236; --accent-ink:#0c1a1c;
+    --warn:#e7b25c; --warn-bg:#2e2616; --err:#ef8d84; --err-bg:#331e1c; --ok:#7fc58b;
+    --shadow:none;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--font);font-size:var(--text-base);color:var(--text);background:var(--bg);line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+input,textarea,select{font:inherit;color:inherit}
+kbd{font-family:var(--mono);font-size:11px;line-height:1;padding:2px 5px;border:1px solid var(--border-strong);border-bottom-width:2px;border-radius:4px;background:var(--surface);color:var(--muted);white-space:nowrap}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) var(--space-5);background:var(--surface);border-bottom:1px solid var(--border)}
+.brand{font-weight:600;font-size:var(--text-lg);letter-spacing:-.01em;margin-right:var(--space-2);white-space:nowrap}
+.brand small{font-weight:400;color:var(--muted);font-size:var(--text-xs);margin-left:var(--space-2)}
+.topbar .spacer{flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-strong);background:var(--surface);border-radius:var(--radius-sm);padding:5px 10px;font-size:var(--text-sm);cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:500}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn kbd{background:transparent}
+.btn.primary kbd{color:var(--accent-ink);border-color:rgba(255,255,255,.45)}
+.btn:focus-visible,.opt:focus-visible,.row:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+/* layout */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,0.82fr);gap:var(--space-5);padding:var(--space-4) var(--space-5) var(--space-8);max-width:1560px;margin:0 auto}
+.inputs{display:flex;flex-direction:column;gap:var(--space-3);min-width:0}
+.output{position:sticky;top:60px;align-self:start;display:flex;flex-direction:column;gap:var(--space-3);max-height:calc(100vh - 76px)}
+
+/* cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card-h{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-4);border-bottom:1px solid var(--border)}
+.card-h h2{margin:0;font-size:var(--text-xs);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.card-h .secnum{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.card-h .actions{margin-left:auto;display:flex;gap:var(--space-2);align-items:center}
+.linkbtn{background:none;border:0;color:var(--accent);font-size:var(--text-xs);cursor:pointer;padding:2px 4px;border-radius:4px}
+.linkbtn:hover{text-decoration:underline}
+
+/* rows */
+.row{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:center;gap:var(--space-3);padding:6px var(--space-4);border-top:1px solid transparent;border-bottom:1px solid transparent;cursor:default;outline:none}
+.row + .row{border-top-color:var(--border)}
+.row.current{background:var(--accent-soft)}
+.row.disabled{opacity:.42}
+.row .lbl{font-size:var(--text-sm);font-weight:500;display:flex;flex-direction:column;gap:1px}
+.row .lbl .sub{font-weight:400;font-size:var(--text-xs);color:var(--muted)}
+.row .tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px}
+.tag{font-size:10.5px;font-family:var(--mono);padding:0 5px;border-radius:3px;border:1px solid var(--border-strong);color:var(--muted);line-height:16px}
+.tag.auto{border-color:transparent;background:var(--surface-3)}
+.tag.z{border-color:transparent;background:var(--accent-soft);color:var(--accent)}
+.tag.manual{cursor:pointer}
+.tag.manual:hover{color:var(--accent);border-color:var(--accent)}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-strong);background:var(--surface);border-radius:var(--radius-sm);padding:4px 9px 4px 5px;font-size:var(--text-sm);cursor:pointer;text-align:left;line-height:1.25}
+.opt:hover{border-color:var(--accent)}
+.opt .k{font-family:var(--mono);font-size:10.5px;min-width:17px;height:17px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;background:var(--surface-3);color:var(--muted)}
+.opt u{text-decoration:none;border-bottom:1.5px solid currentColor}
+.opt.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.opt.on .k{background:rgba(255,255,255,.2);color:var(--accent-ink)}
+.opt.multi::before{content:"";width:11px;height:11px;border:1.5px solid currentColor;border-radius:2px;opacity:.6;order:2;margin-left:-2px}
+.opt.multi .k{order:1}.opt.multi .t{order:3}
+.opt.multi.on::before{background:currentColor;opacity:1;box-shadow:inset 0 0 0 2px var(--accent)}
+.row.disabled .opt{cursor:not-allowed}
+.hint{grid-column:2;font-size:var(--text-xs);color:var(--muted);margin-top:-2px}
+.textrow{display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:center}
+.field{display:flex;flex-direction:column;gap:2px}
+.field label{font-size:var(--text-xs);color:var(--muted)}
+.inp{border:1px solid var(--border-strong);background:var(--surface);border-radius:var(--radius-sm);padding:5px 8px;font-size:var(--text-sm);min-width:0}
+.inp:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+textarea.inp{width:100%;resize:vertical;min-height:52px;line-height:1.4}
+
+/* z panel */
+.zgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:var(--space-2) var(--space-3);padding:var(--space-3) var(--space-4)}
+.zcell{display:flex;flex-direction:column;gap:2px}
+.zcell label{font-size:var(--text-xs);color:var(--muted);display:flex;justify-content:space-between;gap:4px}
+.zcell label .res{font-family:var(--mono);font-size:10.5px}
+.res.lo{color:var(--err)} .res.hi{color:var(--warn)} .res.nl{color:var(--ok)}
+.zcell .inp{width:100%;font-family:var(--mono)}
+.zsub{padding:0 var(--space-4) var(--space-3);display:flex;flex-direction:column;gap:var(--space-2)}
+.zsub h3{margin:var(--space-1) 0 0;font-size:var(--text-xs);color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.bdgrid{display:grid;grid-template-columns:56px repeat(3,minmax(70px,1fr)) minmax(96px,1.1fr);gap:6px var(--space-2);align-items:center;font-size:var(--text-xs)}
+.bdgrid .hd{color:var(--muted)}
+.bdgrid .inp{width:100%;font-family:var(--mono)}
+.calc{font-family:var(--mono);font-size:var(--text-xs);color:var(--muted)}
+.calc b{font-weight:500;color:var(--text)}
+.calc .sig{color:var(--accent);font-weight:500}
+details.zp > summary{list-style:none;cursor:pointer}
+details.zp > summary::-webkit-details-marker{display:none}
+details.zp > summary .chev{transition:transform .15s;display:inline-block;color:var(--muted)}
+details.zp[open] > summary .chev{transform:rotate(90deg)}
+
+/* output */
+.outcard{display:flex;flex-direction:column;min-height:0;flex:1}
+.outhead{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;padding:var(--space-2) var(--space-3);border-bottom:1px solid var(--border)}
+.seg{display:inline-flex;border:1px solid var(--border-strong);border-radius:var(--radius-sm);overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:3px 9px;font-size:var(--text-xs);cursor:pointer}
+.seg button + button{border-left:1px solid var(--border-strong)}
+.seg button.on{background:var(--text);color:var(--surface)}
+.report{margin:0;padding:var(--space-4);font-family:var(--mono);font-size:13px;line-height:1.6;white-space:pre-wrap;word-wrap:break-word;overflow:auto;flex:1;min-height:180px;background:var(--surface)}
+.report .ph{background:var(--err-bg);color:var(--err);border-radius:3px;padding:0 2px}
+.report .empty{color:var(--faint);font-family:var(--font)}
+textarea.report{border:0;resize:none;width:100%;outline:none;color:var(--text)}
+.editbanner{display:none;padding:6px var(--space-3);font-size:var(--text-xs);background:var(--warn-bg);color:var(--warn);border-bottom:1px solid var(--border);gap:var(--space-2);align-items:center}
+.editing .editbanner{display:flex}
+.copybar{display:flex;gap:var(--space-2);padding:var(--space-3);border-top:1px solid var(--border);flex-wrap:wrap;align-items:center}
+.copybar .status{font-size:var(--text-xs);color:var(--muted);margin-left:auto}
+.copybar .status.ok{color:var(--ok)}
+.warns{padding:var(--space-2) var(--space-3);display:flex;flex-direction:column;gap:6px;max-height:34vh;overflow:auto}
+.warns:empty{display:none}
+.w{font-size:var(--text-xs);line-height:1.4;padding:6px 8px;border-radius:var(--radius-sm);background:var(--warn-bg);color:var(--warn);display:flex;gap:6px}
+.w.err{background:var(--err-bg);color:var(--err)}
+.w.info{background:var(--surface-2);color:var(--muted)}
+.w b{font-weight:600}
+.wcount{font-size:var(--text-xs);color:var(--muted)}
+
+.toast{position:fixed;left:50%;bottom:20px;width:max-content;max-width:calc(100vw - 32px);transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;background:var(--text);color:var(--surface);padding:8px 14px;border-radius:var(--radius);font-size:var(--text-sm);display:flex;gap:var(--space-3);align-items:center;transition:all .18s;z-index:50}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast button{background:none;border:1px solid rgba(255,255,255,.4);color:inherit;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:var(--text-xs)}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(10,20,20,.45);display:none;align-items:flex-start;justify-content:center;padding:6vh var(--space-4);z-index:60;overflow:auto}
+.modal.show{display:flex}
+.modal .box{background:var(--surface);border-radius:var(--radius);max-width:760px;width:100%;padding:var(--space-5) var(--space-6);box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.modal h2{margin:0 0 var(--space-3);font-size:var(--text-xl);font-weight:600}
+.modal h3{margin:var(--space-4) 0 var(--space-2);font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.kgrid{display:grid;grid-template-columns:auto 1fr;gap:6px var(--space-4);font-size:var(--text-sm);align-items:center}
+.kgrid div:nth-child(odd){display:flex;gap:4px;flex-wrap:wrap}
+.modal p,.modal li{font-size:var(--text-sm);color:var(--muted)}
+.modal ul{padding-left:18px;margin:0}
+.setgrid{display:grid;grid-template-columns:1fr auto;gap:var(--space-3) var(--space-4);align-items:center;font-size:var(--text-sm)}
+.setgrid .d{font-size:var(--text-xs);color:var(--muted)}
+.close{float:right}
+
+@media (max-width: 1080px){
+  .layout{grid-template-columns:1fr}
+  .output{position:static;max-height:none}
+}
+@media (max-width: 640px){
+  .topbar{flex-wrap:wrap;padding:var(--space-2) var(--space-3)}
+  .brand small{display:none}
+  .layout{padding:var(--space-3)}
+  .row{grid-template-columns:1fr;gap:6px}
+  .hint{grid-column:1}
+  .topbar .hide-sm{display:none}
+  .bdgrid{grid-template-columns:44px repeat(3,minmax(0,1fr));}
+  .bdgrid .calc{grid-column:2 / -1}
+  .bdgrid .hd.calc-h{display:none}
+}
+
+.releasebar{margin:12px 18px;padding:12px;border:2px solid #527d93;border-radius:8px;background:var(--surface);font-size:13px;line-height:1.5}.releasebar details{margin:8px 0}.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}.tools .inp{width:auto;max-width:280px}#learningCard p{margin:6px 0}#learningCard ul{padding-left:20px}#learningCard button:disabled{opacity:.45}#reasoning{line-height:1.5;font-size:13px}#reasoning h3{margin:10px 0 4px}#reviewState{color:var(--warn)}#casePrompt,#caseAnswer{white-space:pre-wrap;margin:12px 0}.output{max-height:none}.card a{color:#347fbe}
+.row .opts{flex-wrap:wrap}.row .opt[data-v^="dec_"]{border-color:#527d93;white-space:nowrap}.tz{display:inline-flex;flex-direction:column;align-items:flex-start}.zc{display:block;font-size:9px;line-height:1.1;font-weight:400;opacity:.6;margin-top:1px;white-space:nowrap}.optional-row{background:var(--surface-2)}mark.caveat{background:var(--warn-bg);color:var(--warn);outline:1px solid var(--warn);border-radius:3px;padding:0 2px;cursor:help}.caveat-note{display:block;font-size:var(--text-xs);color:var(--warn);background:var(--warn-bg);border-radius:var(--radius-sm);padding:2px 5px;margin-top:3px;line-height:1.3}.unusable-on [data-sec]:not([data-sec="quality"]){opacity:.4}[hidden]{display:none!important}</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">PFT Clinical Fidelity<small>v2.0.0-final · 2026-10-22 · review required</small></div>
+  <button class="btn" id="btnNormal" title="Mark all measured components normal (BD left for you)">Reviewed-normal findings <kbd>⇧A</kbd></button>
+  <button class="btn hide-sm" id="btnNormSpiro" title="Spirometry-only study: normal spirometry and loop; lung volumes and DLCO marked not performed; jumps to the bronchodilator row">Normal spiro only <kbd>⇧S</kbd></button>
+  <span class="spacer"></span>
+  <button class="btn" id="btnNew" title="Clear everything for the next patient">New patient <kbd>⇧N</kbd></button>
+  <button class="btn" id="btnSettings" aria-label="Settings">Settings</button>
+  <button class="btn" id="btnHelp" aria-label="Keyboard shortcuts">Shortcuts <kbd>?</kbd></button>
+</header>
+
+<section class="releasebar" aria-label="Release and workflow">
+<div>Clinical Fidelity v2.0.0-final · 2026-10-22 · adult workflow · final workflow build; not independently clinically validated</div>
+<details><summary>Release notes / rollback / sources</summary><p>New evidence-first engine; measured-test scope; independent lung-volume observations; no automatic disease-specific diagnoses; report wording adapted from the ATS standardized phraseology (MacIntyre et al. 2025); a descriptive all-normal conclusion; Tests performed selector and spirometry-only normal preset; Next required shortcut; concise flow-volume-loop lines; FEV1 grading of obstruction when FVC and/or TLC is normal, with ungraded obstruction and a coexisting-restriction caveat when FVC is low without usable TLC; possible-obstruction wording for a low ratio with high FVC; effort/weakness, high-BMI, concave-loop, hemoglobin-effect, VA/KCO/VA-TLC and overall quality-grade options; amber attention highlights and matching Checks;  copying blocked only by internal-consistency checks (no acknowledgement step); one-click severity modifiers; borderline-low buttons; Normal spirometry button; Hb-aware quality buttons; statement-only unusable-spirometry report; PRISm only when TLC is unavailable; complex-restriction (RV/TLC) wording; automatic air-trapping/hyperinflation statements; new patient scrolls to the top; concise quality; guided report modules; isolated teaching cases. No patient report is persisted. Revert by opening your saved previous HTML; this file does not modify it. Custom preset schema is version-isolated.</p><p>Interpretive framework: ERS/ATS 2021 standard, published 2022. Quality: ATS/ERS spirometry 2019, ERS/ATS DLCO 2017. Original source recommendations are dated; use current lab-approved reference equations supplied by your PFT system. This app does not compute GLI predictions or Hb corrections.</p><p><a target="_blank" rel="noopener" href="https://publications.ersnet.org/content/erj/60/1/2101499">Interpretation standard</a> · <a target="_blank" rel="noopener" href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6794117/">Spirometry quality</a> · <a target="_blank" rel="noopener" href="https://publications.ersnet.org/content/erj/49/1/1600016">DLCO quality</a> · <a target="_blank" rel="noopener" href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11473026/">Restriction severity uncertainty</a></p></details>
+<div class="tools"><label for="findingSearch">Find</label><input id="findingSearch" class="inp" placeholder="Find finding (Ctrl/⌘K)"><button class="btn" id="findNext">Next match</button><span id="findStatus" role="status"></span><label><input type="checkbox" id="includeHeaders" checked>Section headers</label><label for="spiroBasis">Spirometry basis</label><select id="spiroBasis" class="inp"><option value="pre">Pre-BD</option><option value="post">Post-BD</option></select><label for="referenceName">Reference equations (optional label)</label><input class="inp" id="referenceName" placeholder="From laboratory report; no identifiers"></div>
+<details><summary>Reusable finding templates (not diagnostic presets)</summary><p>Save categorical observations only. Quality, BDR, severity, Hb, patient text, dates and numeric values are excluded. Generic template names only. Loading clears the form first; Undo restores it. Templates are not automatically copied.</p><div class="tools"><input class="inp" id="presetName" placeholder="Generic template name" aria-label="Preset name"><button class="btn" id="savePreset">Save observations</button><select class="inp" id="presetSelect" aria-label="Saved observation templates"></select><button class="btn" id="loadPreset">Load</button><button class="btn" id="deletePreset">Delete</button><button class="btn" id="exportPreset">Export</button><button class="btn" id="importPreset">Import</button><input type="file" accept=".json,application/json" id="presetFile" hidden></div><div id="recentPresets"></div><p id="presetStatus" role="status"></p></details>
+</section>
+<main class="layout">
+  <section class="inputs" id="inputs" aria-label="Findings"></section>
+  <aside class="output" aria-label="Generated report"><div class="card" id="learningCard"><div class="card-h"><h2>Why this interpretation?</h2></div><div style="padding:12px"><div id="reasoning"></div><details><summary>Guided sentence modules — verified against current observations</summary><p>These do not populate findings. Enter evidence first; then use a supported module to verify the suggested pattern. Severity, BDR and quality remain independent.</p><div id="moduleButtons" class="tools"></div></details><input type="checkbox" id="reviewAck" hidden><button id="approveReport" hidden type="button"></button><p id="reviewState" hidden></p></div></div>
+<div class="card"><details id="practicePanel" style="padding:12px"><summary>Practice cases — fictional; never populate the clinical form</summary><p id="practiceNotice">Choose a case and predict the physiological pattern before revealing the explanation. While a case is active, app copying is disabled.</p><select class="inp" id="practiceCase" aria-label="Practice case"></select><div id="casePrompt"></div><label for="practiceGuess">Your interpretation</label><select class="inp" id="practiceGuess"><option value="">Choose…</option><option value="obs">Obstruction</option><option value="mixed">Mixed impairment</option><option value="res">Restriction</option><option value="nonspecific">Nonspecific pattern</option><option value="preserved">Preserved ratio; restriction unconfirmed</option><option value="normalspiro">Normal spirometry</option></select><button class="btn" id="revealCase">Reveal reasoning</button><div id="caseAnswer"></div><button class="btn" id="leavePractice">Return to clinical workflow</button></details></div>
+    <div class="card outcard" id="outcard">
+      <div class="outhead">
+        <h2 style="margin:0;font-size:var(--text-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600">Report</h2>
+        <span class="spacer" style="flex:1"></span>
+        <div class="seg" role="group" aria-label="Sentence layout">
+          <button id="fmtPara">Paragraph</button><button id="fmtLines">One per line</button>
+        </div>
+        <button class="btn" id="btnEdit" title="Hand-edit the text before copying">Edit text</button>
+      </div>
+      <div class="editbanner"><span id="editMsg">Hand-editing. Generated text is paused.</span><span style="flex:1"></span><button class="linkbtn" id="btnRegen">Discard edits &amp; regenerate</button></div>
+      <pre class="report" id="report" aria-live="polite"></pre>
+      <div class="copybar">
+        <button class="btn primary" id="btnCopy">Copy report <kbd>⌘↵</kbd></button>
+        <button class="btn" id="btnCopyClear">Copy &amp; clear</button>
+        <button class="btn" id="btnCopyInterp" title="Copy only the INTERPRETATION section">Copy interpretation <kbd>⇧I</kbd></button>
+        <span class="status" id="copyStatus"></span>
+      </div>
+    </div>
+    <div class="card" id="warncard">
+      <div class="card-h"><h2>Checks</h2><span class="wcount" id="wcount"></span></div>
+      <div class="warns" id="warns"></div>
+    </div>
+  </aside>
+</main>
+
+<div class="toast" id="toast"><span id="toastMsg"></span><button id="toastUndo">Undo <span style="opacity:.7">⇧Z</span></button></div>
+
+<div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="box">
+    <button class="btn close" data-close>Close <kbd>Esc</kbd></button>
+    <h2 id="helpTitle">Keyboard shortcuts</h2>
+    <h3>Moving around</h3>
+    <div class="kgrid">
+      <div><kbd>↓</kbd><kbd>J</kbd><kbd>Enter</kbd><kbd>Tab</kbd></div><div>Next row</div>
+      <div><kbd>↑</kbd><kbd>K</kbd><kbd>⇧Tab</kbd></div><div>Previous row</div>
+      <div><kbd>]</kbd> <kbd>[</kbd></div><div>Next / previous section</div>
+      <div><kbd>G</kbd></div><div>Jump to the z-score quick entry</div>
+      <div><kbd>Esc</kbd></div><div>Leave a text box and return to row navigation</div>
+    </div>
+    <h3>Choosing</h3>
+    <div class="kgrid">
+      <div><kbd>1</kbd>–<kbd>9</kbd></div><div>Pick option by number (press again to clear a single-choice row)</div>
+      <div><kbd>N</kbd> <kbd>D</kbd> <kbd>I</kbd> …</div><div>Pick by the underlined letter (N = normal, D = decreased, I = increased, X = not performed)</div>
+      <div><kbd>0</kbd> <kbd>⌫</kbd></div><div>Clear the row (interpretation rows return to auto)</div>
+      <div><kbd>R</kbd> on an interpretation row label</div><div>Click the <span class="tag manual">manual ↺</span> tag to restore the automatic suggestion</div>
+    </div>
+    <h3>Report</h3>
+    <div class="kgrid">
+      <div><kbd>⌘↵</kbd><kbd>Ctrl↵</kbd><kbd>⇧C</kbd></div><div>Copy full report as plain text</div>
+      <div><kbd>⇧I</kbd></div><div>Copy interpretation only</div>
+      <div><kbd>⇧↵</kbd></div><div>Jump to the next required item that is still unset (wraps around)</div>
+      <div><kbd>⇧O</kbd></div><div>Tests performed: spirometry only (lung volumes and DLCO not performed)</div>
+      <div><kbd>⇧M</kbd></div><div>Normal FVC, FEV1 and FEV1/FVC, then jump to the bronchodilator row (loop unchanged)</div>
+      <div><kbd>⇧Q</kbd> <kbd>⇧W</kbd></div><div>Quality: all adequate · Hb adjusted / Hb not adjusted</div>
+      <div><kbd>⇧U</kbd></div><div>Statement-only report: unable to produce acceptable spirometry (toggle)</div>
+      <div><kbd>⇧A</kbd></div><div>Normal study preset (spirometry, loop, volumes, DLCO normal; you still choose BD)</div>
+      <div><kbd>⇧S</kbd></div><div>Normal spirometry + loop, lung volumes and DLCO marked not performed (spirometry-only study), then jump to the bronchodilator row</div>
+      <div><kbd>⇧N</kbd> then <kbd>⇧Z</kbd></div><div>New patient (clears everything) · undo</div>
+      <div><kbd>⇧L</kbd></div><div>Toggle paragraph / one sentence per line</div>
+      <div><kbd>?</kbd></div><div>This panel</div>
+    </div>
+    <h3>How the logic works</h3>
+    <ul>
+      <li>Findings are never pre-selected. Unmarked sections are left out of the report and flagged under Checks.</li>
+      <li>Interpretation rows tagged <span class="tag auto">auto</span> follow your findings live. Choosing an option yourself marks it <span class="tag manual">manual ↺</span>; click the tag or press <kbd>0</kbd> to hand it back to auto.</li>
+      <li>Patterns follow the ERS/ATS 2021 algorithms: obstruction = FEV1/FVC &lt; LLN; restriction = TLC &lt; LLN; mixed = both; complex restriction = low TLC with raised RV/TLC or FRC/TLC and a normal FEV1/FVC; low FVC/FEV1 with a normal ratio and no low TLC = nonspecific pattern/PRISm.</li>
+      <li>Report wording is adapted from the standardized phraseology of MacIntyre NR, et al., Ann Am Thorac Soc 2025;22(11):1633-1640 (doi:10.1513/AnnalsATS.202501-063PS). Your own template sentences (PRISm, complex-restriction explanation, DLCO differential, bronchodilator comment, early-restriction and full-PFT statements) remain custom.</li><li>A fully normal study names what was measured and found normal (for example "Normal spirometry, static lung volumes and diffusing capacity."). Use "Tests performed" (or ⇧O / ⇧S) for a spirometry-only study.</li><li>Mild ↓ / Moderate ↓ / Severe ↓ buttons on FVC, FEV1, FEV1/FVC, TLC and DLCO select the finding and its modifier together. Cutoffs: mild z −1.65 to −2.5, moderate −2.5 to −4, severe below −4. An entered z-score overrides the button. Obstruction severity comes from FEV1 when the FVC and/or TLC is normal (a low FEV1/FVC with a normal FEV1 is called mild); with a low FVC and no usable TLC it is left ungraded. Restriction is graded by TLC and mixed impairment by FEV1.</li><li>Optional rows (near limit, BMI, hemoglobin effect, VA, KCO, VA/TLC, effort, overall quality grade) are skipped by automatic row advance and by Next required. Amber highlights in the report preview, and the matching yellow items in Checks, mark wording that may need extra attention; highlights are display-only and never copied.</li>
+      <li>When DLCO is reduced and the Hb quality row says not adjusted (with no hemoglobin-effect choice), the interpretation adds that the DLCO has not been adjusted for hemoglobin and that anemia, if present, may contribute. Choosing the hemoglobin effect "Hgb not available" gives the unavailable-hemoglobin sentence instead.</li>
+      <li>In a spirometry-only study (lung volumes and DLCO both not performed) the empty LUNG VOLUMES and DIFFUSING CAPACITY sections are omitted. If only one of the two was skipped, that section still prints "Not performed."</li>
+      <li>The BMI button only adds an obesity note to a restrictive or mixed conclusion. Obesity is a likelier contributor at BMI above 40 kg/m²; at lower BMI it mainly lowers FRC and ERV.</li>
+      <li>Bronchodilator response = (post − pre) × 100 / predicted &gt; 10% for FEV1 or FVC.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="modal" id="setModal" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+  <div class="box">
+    <button class="btn close" data-close>Close <kbd>Esc</kbd></button>
+    <h2 id="setTitle">Settings</h2>
+    <div class="setgrid">
+      <div>Lower limit of normal (z-score)<div class="d">Used by the quick entry. ERS/ATS default is the 5th percentile (−1.645); the guideline allows −1.96 or −2.326 for low-risk screening if documented. The upper limit mirrors it (+).</div></div>
+      <select class="inp" id="setLLN"><option value="-1.645">−1.645 (5th pct)</option><option value="-1.96">−1.96 (2.5th pct)</option><option value="-2.326">−2.326 (1st pct)</option></select>
+      <div>Repeat the bronchodilator sentence in INTERPRETATION<div class="d">Your template states it under both MECHANICS and INTERPRETATION.</div></div>
+      <input type="checkbox" id="setRepeatBD">
+      <div>Print “Not performed.” for sections marked X<div class="d">Otherwise those sections are left out entirely.</div></div>
+      <input type="checkbox" id="setNP">
+      <div>Auto-advance after a single-choice pick<div class="d">Moves to the next row so you can keep typing keys while you read.</div></div>
+      <input type="checkbox" id="setAdvance">
+      <div>Include DLCO severity in the text when chosen<div class="d">e.g. “Mildly decreased.” instead of “Decreased.”</div></div>
+      <input type="checkbox" id="setDlcoSev">
+      <div>Blank line between report sections</div>
+      <input type="checkbox" id="setGap">
+    </div>
+    <p style="margin-top:var(--space-5)">Everything runs in this browser tab. Nothing is sent anywhere, and the app does not store or ask for patient identifiers.</p>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =====================================================================
+   PHRASES — your template language. Edit wording here if needed.
+   ===================================================================== */
+const P = {
+  fvc:  { norm:'Forced vital capacity (FVC) is normal.', dec:'Forced vital capacity (FVC) is decreased.', inc:'Forced vital capacity (FVC) is increased.' },
+  fev1: { norm:'Forced expiratory volume in one second (FEV1) is normal.', dec:'Forced expiratory volume in one second (FEV1) is decreased.', inc:'Forced expiratory volume in one second (FEV1) is increased.' },
+  ratio:{ norm:'FEV1/FVC is normal.', dec:'FEV1/FVC is decreased.' },
+  bd:   { sig:'There is spirometric improvement after bronchodilator administration.',
+          nsig:'There is no spirometric improvement after bronchodilator administration.' },
+  fvlShape:{ norm:'Normal.', narrow:'Narrowed.' },
+  fvlFlow:{ low:'Decreased expiratory gas flow at low lung volumes.', lowmid:'Decreased expiratory gas flow at low and mid lung volumes.', all:'Decreased expiratory gas flow at all lung volumes.' },
+  fvlOther:{ insp:'Flattened inspiratory limb.', exp:'Flattened expiratory limb.', high:'Increased expiratory gas flow at high lung volumes.', concave:'Concave expiratory limb.' },
+  tlc:{ norm:'Total lung capacity (TLC) is normal.', dec:'Total lung capacity (TLC) is decreased.', inc:'Total lung capacity (TLC) is increased.' },
+  rv:{ norm:'Residual volume (RV) is normal.', inc:'Residual volume (RV) is increased.', dec:'Residual volume (RV) is decreased.' },
+  lvRatios:{ rvtlc:'RV/TLC is increased.', frctlc:'FRC/TLC is increased.' },
+  dlco:{ norm:'Normal.', dec:'Decreased.', inc:'Increased.', sev:{ mild:'Mildly decreased.', mod:'Moderately decreased.', sev:'Severely decreased.' } },
+  dlcoQual:{ hb:"The diffusing capacity was not adjusted for the patient's hemoglobin.",
+             tech:'The measured diffusing capacity is not accurate, as the patient was unable to perform a technically adequate test maneuver.' },
+  notPerformed:'Not performed.',
+  primary:{
+    normal:'The pulmonary function tests are normal.',
+    normmv:'Normal mechanics and lung volumes.',
+    obs:s=>`There is ${art(s)} ${s} obstructive ventilatory defect.`,
+    res:s=>`There is ${art(s)} ${s} restrictive ventilatory defect.`,
+    mixed:s=>`There is ${art(s)} ${s} mixed obstructive and restrictive ventilatory defect.`,
+    complex:s=>`There is ${art(s)} ${s} restrictive ventilatory defect with a complex restrictive pattern. Complex restrictive defects are associated with disorders that impair lung emptying, including neuromuscular lung disease (non-concentric changes in lung volume), chest wall restriction and occult obstruction with gas trapping.`,
+    prism:'There is a non-specific decrease in FVC and/or FEV1 with a normal FEV1/FVC ratio (also referred to as Preserved Ratio Impaired Spirometry, or PRISm), which in some cases will progress to an obstructive or restrictive ventilatory defect in the future.'
+  },
+  concObs:'There is a concomitant obstructive ventilatory defect.',
+  concRes:'There is a concomitant restrictive ventilatory defect.',
+  bdDisclaimer:'This does not preclude clinical efficacy of inhaled bronchodilators.',
+  airTrap:'Lung-volume abnormalities require separate assessment.',
+  uao:{ extra:'Flattening of the inspiratory limb suggests that a variable extrathoracic airway obstruction may be present.',
+        intra:'Flattening of the expiratory limb of the flow volume loop suggests that a variable intrathoracic airway obstruction may be present.',
+        fixed:'Flattening of both the inspiratory and expiratory limbs of the flow volume loop suggests that a fixed upper airway obstruction may be present.' },
+  dlcoStmt:{ norm:'Gas exchange (diffusing capacity) is normal.', dec:'Gas exchange (diffusing capacity) is decreased.',
+             decSev:{ mild:'Gas exchange (diffusing capacity) is mildly decreased.', mod:'Gas exchange (diffusing capacity) is moderately decreased.', sev:'Gas exchange (diffusing capacity) is severely decreased.' },
+             iso:'There is an isolated reduction in diffusing capacity.', inc:'Gas exchange (diffusing capacity) is increased.' },
+  dlcoCtx:{ against:'The normal diffusing capacity argues against the presence of significant emphysema.',
+            ddx:'Decreases in diffusing capacity may be due to emphysema, interstitial lung disease, pulmonary vascular disease (including pulmonary emboli and pulmonary hypertension), anemia, chronic liver disease, or active cigarette smoking.',
+            emph:'In the setting of airway obstruction, the decreased diffusing capacity suggests the presence of emphysema.',
+            ild:'In the setting of a restrictive ventilatory defect, the decreased diffusing capacity suggests possible interstitial lung disease.',
+            prop:'A reduction in diffusing capacity out of proportion to reduction in vital capacity may suggest combined pulmonary fibrosis and emphysema, or pulmonary vascular disease.' },
+  compared:(d,t)=>`Compared to the previous study of ${d}, ${t}`,
+  unchanged:'there has been no significant change.',
+  tech:{ pleth:'The increase in TLC may in part be due to measurement of lung volumes by body plethysmography in the current study, while nitrogen washout was used in the previous study.',
+         n2:'The decrease in TLC may in part be due to measurement of lung volumes by nitrogen washout in the current study, while body plethysmography was used in the previous study.',
+         cant:'Lung volumes cannot be compared due to differences in technique.' },
+  noPrior:'There are no previous tests available for comparison.'
+};
+const SEV_WORD = { mild:'mild', mod:'moderate', sev:'severe' };
+function art(s){ return /^[aeiou\[]/i.test(s) && s!=='[severity]' ? 'an' : 'a'; }
+
+/* =====================================================================
+   ROW DEFINITIONS
+   ===================================================================== */
+const SECTIONS = [
+ {id:'quality',title:'Quality',sub:'manual review · concise output'},
+  { id:'mech', title:'Mechanics', sub:'Spirometry' },
+  { id:'fvl',  title:'Flow-volume loop' },
+  { id:'lv',   title:'Lung volumes' },
+  { id:'dlco', title:'Diffusing capacity (DLCO)' },
+  { id:'interp', title:'Interpretation', auto:true },
+  { id:'comp', title:'Comparison & comments' },
+];
+const ROWS = [
+{"id": "q_pre", "label": "Spirometry", "opts": [["ok", "Acceptable + repeatable", "a"], ["limited", "Limited / usable", "l"], ["bad", "Unusable", "u"]], "sec": "quality"},
+{"id": "q_post", "label": "Post-BD spirometry", "opts": [["ok", "Acceptable + repeatable", "a"], ["limited", "Limited / usable", "l"], ["bad", "Unusable", "u"]], "sec": "quality"},
+{"id": "q_lv", "label": "Lung volumes", "opts": [["ok", "Acceptable + repeatable", "a"], ["limited", "Limited / usable", "l"], ["bad", "Unusable", "u"]], "sec": "quality"},
+{"id": "q_dl", "label": "DLCO maneuvers", "opts": [["ok", "Acceptable + repeatable", "a"], ["limited", "Limited / usable", "l"], ["bad", "Unusable", "u"]], "sec": "quality"},
+{"id": "q_vi", "label": "DLCO inspired volume", "sub": "Volume criterion only; numeric IVC/VC supported.", "opts": [["ok", "≥90% largest VC", "a"], ["alt", "≥85% + VA verified", "v"], ["bad", "Criterion not met", "n"]], "sec": "quality"},
+{"id": "q_hb", "label": "DLCO Hb adjustment", "opts": [["yes", "Performed", "p"], ["no", "Not performed", "n"]], "sec": "quality"},
+{"id": "q_limits", "label": "Specific limitations", "multi": true, "opts": [["effort", "Effort", "e"], ["cough", "Cough", "c"], ["leak", "Leak", "l"], ["end", "Early termination", "t"], ["timing", "DLCO timing", "d"], ["repeat", "Repeatability", "r"]], "sec": "quality"},
+{"id": "qGrade", "label": "Overall quality grade", "sub": "optional · picks the standard quality sentence", "optional": true, "opts": [["ab", "Grade A / B", "a"], ["ce", "Grade C – E", "c"], ["u", "Usable (grade U)", "u"]], "sec": "quality"},
+  { id:'fvc', sec:'mech', label:'FVC', opts:[['norm','Normal','n'],['dec','Decreased','d']] },
+  { id:'fev1', sec:'mech', label:'FEV1', opts:[['norm','Normal','n'],['dec','Decreased','d']] },
+  { id:'ratio', sec:'mech', label:'FEV1/FVC', opts:[['norm','Normal','n'],['dec','Decreased','d']] },
+  { id:'bd', sec:'mech', label:'Bronchodilator', sub:'>10% of predicted, FEV1 or FVC', opts:[['sig','Significant','s'],['nsig','Not significant','n'],['np','Not performed','x'],['indet','Uninterpretable','u']] },
+  { id:'nearMech', sec:'mech', optional:true, multi:true, label:'Near limit', sub:'optional · adds one line to INTERPRETATION only', opts:[['fvc_lln','FVC near LLN','f'],['fev1_lln','FEV1 near LLN','e'],['ratio_lln','FEV1/FVC near LLN','r']] },
+
+  { id:'fvlShape', sec:'fvl', label:'Overall', sub:'normal, or abnormal with no specific pattern below', opts:[['norm','Normal','n'],['narrow','Narrowed','r']] },
+  { id:'fvlFlow', sec:'fvl', label:'Expiratory flow', sub:'decreased at…', opts:[['low','Low volumes','l'],['lowmid','Low & mid volumes','m'],['all','All volumes','a']] },
+  { id:'fvlOther', sec:'fvl', label:'Other', multi:true, opts:[['insp','Inspiratory limb flattened','i'],['exp','Expiratory limb flattened','e'],['high','↑ flow at high volumes','h'],['concave','Concave expiratory limb','c']] },
+
+  { id:'tlc', sec:'lv', label:'TLC', opts:[['norm','Normal','n'],['dec','Decreased','d'],['inc','Increased','i'],['np','Not performed','x']] },
+  { id:'rv', sec:'lv', label:'RV', opts:[['norm','Normal','n'],['inc','Increased','i'],['dec','Decreased','d']] },
+  { id:'lvRatios', sec:'lv', label:'Ratios', sub:'mark if increased', multi:true, opts:[['rvtlc','RV/TLC ↑','r'],['frctlc','FRC/TLC ↑','f']] },
+  { id:'nearLv', sec:'lv', optional:true, multi:true, label:'Near limit', sub:'optional · adds one line to INTERPRETATION only', opts:[['tlc_lln','TLC near LLN','t'],['tlc_uln','TLC near ULN','u'],['rv_lln','RV near LLN','r'],['rv_uln','RV near ULN','v'],['rvtlc_uln','RV/TLC near ULN','c'],['frctlc_uln','FRC/TLC near ULN','f']] },
+  { id:'bmiHigh', sec:'lv', optional:true, label:'BMI', sub:'optional · adds an obesity note to a restrictive conclusion · a likelier contributor at BMI above 40', opts:[['hi','High BMI','b']] },
+
+  { id:'dlco', sec:'dlco', label:'DLCO', opts:[['norm','Normal','n'],['dec','Decreased','d'],['inc','Increased','i'],['np','Not performed','x']] },
+  { id:'nearDlco', sec:'dlco', optional:true, multi:true, label:'Near limit', sub:'optional · adds one line to INTERPRETATION only', opts:[['dlco_lln','DLCO near LLN','l']] },
+  { id:'dlcoHgb', sec:'dlco', optional:true, label:'Hemoglobin effect', sub:'optional · for a reduced or increased DLCO', opts:[['na','Hgb not available','n'],['full','Fully explains DLCO','f'],['part','Does not fully explain','p']] },
+  { id:'dlcoVA', sec:'dlco', optional:true, label:'VA', sub:'optional · reduced DLCO only', opts:[['norm','Normal','n'],['low','Low','l']] },
+  { id:'dlcoKCO', sec:'dlco', optional:true, label:'KCO', sub:'optional · reduced DLCO only', opts:[['low','Low','l'],['norm','Normal','n'],['high','High','h']] },
+  { id:'dlcoVATLC', sec:'dlco', optional:true, label:'VA/TLC', sub:'optional · reduced DLCO only', opts:[['norm','Normal','n'],['low','Low','l']] },
+
+  {id:'primary',sec:'interp',label:'Pattern verification',sub:'Evidence-based suggestion; unsupported manual choices block app copying.',auto:true,opts:[['normal','Measured tests normal','n'],['normalspiro','Normal spirometry','s'],['normmv','Normal spirometry + TLC','v'],['obs','Obstructive','o'],['res','Restrictive','r'],['mixed','Mixed','m'],['nonspecific','Nonspecific (normal TLC)','p'],['preserved','Preserved ratio / reduced volumes','u']]},
+
+  { id:'extraStmts', sec:'interp', auto:true, multi:true, label:'Lung-volume statements', sub:'filled from RV, RV/TLC and TLC · click to override', opts:[['airtrap','Air trapping','a'],['hyper','Hyperinflation','h']] },
+  { id:'effortStmt', sec:'interp', optional:true, label:'Effort / weakness', sub:'optional · when poor effort or muscle weakness likely explains the low values', opts:[['yes','Submaximal effort or weakness likely','w']] },
+  { id:'prior', sec:'comp', label:'Prior study', opts:[['none','None available','n'],['comp','Compared to…','c'],['same','Compared: no significant change','u']] },
+  { id:'tech', sec:'comp', label:'Volume technique', sub:'only if it differs', opts:[['pleth','↑TLC: pleth now, N2 before','p'],['n2','↓TLC: N2 now, pleth before','n'],['cant','Not comparable','x']] },
+];
+for(const id of ['fvc','fev1','ratio','tlc','dlco']){const r=ROWS.find(r=>r.id===id);const at=r.opts.findIndex(o=>o[0]==='dec');r.opts.splice(at+1,0,['dec_mild','Mild ↓','m'],['dec_mod','Moderate ↓','o'],['dec_sev','Severe ↓','s']);if(id==='fvc'||id==='fev1')r.opts.push(['inc','Increased','i']);}
+const ROW = Object.fromEntries(ROWS.map(r=>[r.id,r]));
+
+/* =====================================================================
+   STATE
+   ===================================================================== */
+const DEFAULT_SETTINGS = { lln:-1.645, repeatBD:true, np:false, advance:true, dlcoSev:true, gap:true, fmt:'lines', zOpen:false };
+let settings = Object.assign({}, DEFAULT_SETTINGS);   // in-memory for this session
+function saveSettings(){ /* settings live in memory for the current session */ }
+
+function blankState(){
+  const v = {}, autoF = {}, fromZ = {};
+  ROWS.forEach(r=>{ v[r.id] = r.multi ? [] : null; if(r.auto) autoF[r.id] = true; });
+  Object.assign(v,{fvcGrade:null,fev1Grade:null,ratioGrade:null,tlcGrade:null,dlcoSev:null,dlcoQual:[],unusableStudy:false,quickHb:null,tpPick:null});
+  return { v, autoF, fromZ, z:{}, priorDate:'', priorText:'', comments:'' };
+}
+let S = blankState();
+let undoSnap = null;
+let cur = 0;               // index of current row
+let editing = false;
+
+const clone = o => JSON.parse(JSON.stringify(o));
+const has = (id,opt) => opt.startsWith('dec_') ? (S.v[id]==='dec'&&gradeCode(id)===opt.slice(4)) : ROW[id].multi ? S.v[id].includes(opt) : S.v[id]===opt;
+
+/* =====================================================================
+   DERIVED: disabled rows + auto interpretation
+   ===================================================================== */
+function isDisabled(id){
+ const v=S.v;
+ if(id==='q_post')return v.bd==='np';
+ if(id==='nearLv'||id==='bmiHigh')return v.tlc==='np';
+ if(id==='nearDlco')return v.dlco==='np';
+ if(['dlcoVA','dlcoKCO','dlcoVATLC'].includes(id))return v.dlco!=='dec';
+ if(id==='dlcoHgb')return !['dec','inc'].includes(v.dlco);
+ if(['q_dl','q_vi','q_hb'].includes(id))return v.dlco==='np';
+ if(id==='q_lv')return v.tlc==='np';
+ if(['rv','lvRatios'].includes(id))return v.tlc==='np';
+ if(id==='tech')return !['comp','same'].includes(v.prior);
+ return false;
+}
+function lvNormal(){ const v=S.v; return v.tlc==='norm' && (v.rv==='norm'||v.rv===null) && v.lvRatios.length===0; }
+function fvlAbnormal(){ const v=S.v; return v.fvlShape==='narrow' || v.fvlFlow!==null || v.fvlOther.length>0; }
+function sevFromZ(z){ if(z==null||isNaN(z)) return null; if(z>=settings.lln) return null; if(z>=-2.5) return 'mild'; if(z>=-4.0) return 'mod'; return 'sev'; }
+
+function computeAuto(){ return {primary:clinical().pattern}; }
+function applyAuto(){
+ for(const id of Object.keys(GRADE_KEYS))if(S.v[id]!=='dec')S.v[GRADE_KEYS[id]]=null;
+ if(S.v.tlc==='np'){S.v.nearLv=[];S.v.bmiHigh=null;}if(S.v.dlco==='np')S.v.nearDlco=[];
+ if(S.v.dlco!=='dec'){S.v.dlcoVA=null;S.v.dlcoKCO=null;S.v.dlcoVATLC=null;}if(!['dec','inc'].includes(S.v.dlco))S.v.dlcoHgb=null;
+ if(S.autoF.primary)S.v.primary=clinical().pattern;
+ if(S.v.tlc==='np'){S.v.rv=null;S.v.lvRatios=[];}
+ if(S.v.dlco==='np'){S.v.dlcoSev=null;S.v.dlcoQual=[];}
+ if(S.autoF.extraStmts)S.v.extraStmts=autoExtraStmts(S.v);
+}
+
+/* =====================================================================
+   REPORT BUILD
+   ===================================================================== */
+const DLCO_DIFFERENTIAL='Decreases in diffusing capacity may be due to emphysema, interstitial lung disease, pulmonary vascular disease (including pulmonary emboli and pulmonary hypertension), anemia, chronic liver disease, or active cigarette smoking.';
+const PRISM_SENTENCE='There is a nonspecific decrease in FVC and/or FEV1 with a normal FEV1/FVC ratio (also referred to as Preserved Ratio Impaired Spirometry, or PRISm), which in some cases will progress to an obstructive or restrictive ventilatory impairment in the future.';
+const FULL_PFT_STATEMENT="Further evaluation with full PFTs to assess lung volumes may better assess the patient's physiology.";
+const EARLY_RESTRICT='This may suggest an early restrictive ventilatory impairment.';
+const COMPLEX_PHRASE='complex restrictive';
+const COMPLEX_SENTENCE='Complex restrictive impairments are associated with disorders that impair lung emptying, including neuromuscular lung disease (non-concentric changes in lung volume), chest wall restriction and occult obstruction with gas trapping.';
+const UNUSABLE_STATEMENT='Patient was unable to produce Acceptable and Reproducible Spirometry data, precluding interpretation. Consider repeat testing.';
+const QUALITY_GOOD='Test quality is good; the results can be interpreted confidently.';
+const QUALITY_LIMITED='Test quality is acceptable and the data are usable, but technical limitations lower confidence in the interpretation.';
+const QUALITY_USABLE='Test quality is usable, but technical limitations lower confidence in the interpretation.';
+const FVC_NOTE='A normal FVC argues against a restrictive impairment.';
+const EARLY_VENT='This could reflect an early ventilatory impairment.';
+const S34_SENT='The spirometric pattern raises the possibility of obstructive impairment; a normal variant or dysanaptic lung growth should also be considered.';
+const S32_SENT='The spirometric pattern shows obstructive impairment, with air trapping or a coexisting restrictive impairment possible.';
+const EFFORT_SENT='The reduced spirometric values are most likely explained by submaximal effort or muscle weakness.';
+const CONCAVE_SENT='Spirometric indices are normal, but a concave expiratory limb on the flow-volume loop may indicate mild obstruction at low lung volumes or loss of elastic recoil.';
+const OBESITY_NOTE='Obesity may be contributing to the restrictive pattern.';
+const NOT_ADJ_SENT='DLCO has not been adjusted for hemoglobin. Anemia, if present, may contribute to the reduction.';
+const PHRASEOLOGY_NOTE=`<p>Report wording is adapted from the standardized interpretive phraseology in: MacIntyre NR, Bhakta NR, Stanojevic S, Hallstrand TS, Weiner DJ, Healy Z, Balasubramanian A, Ruppel G. Translating Pulmonary Function Test Results into Practical Clinical Interpretations. <i>Ann Am Thorac Soc</i>. 2025;22(11):1633-1640. <a href="https://doi.org/10.1513/AnnalsATS.202501-063PS" target="_blank" rel="noopener">doi:10.1513/AnnalsATS.202501-063PS</a>. The authors note that PFT interpretation alone cannot make diagnoses and advise confirming that automated phraseology fits each case. Sentences taken from the author's own template language (PRISm, complex-restriction explanation, DLCO differential, bronchodilator comment, early-restriction and full-PFT statements) are custom and are not from the paper. Amber highlighting in the report preview marks wording that may need extra attention; it is display-only and is never copied.</p>`;
+const PH = '\u0000';  // placeholder marker
+function join(arr){ return settings.fmt==='lines' ? arr.join('\n') : arr.join(' '); }
+
+function buildSections(){
+ if(S.v.unusableStudy)return [['',[UNUSABLE_STATEMENT]]];
+ const v=S.v,c=clinical(),secs=[['QUALITY:',qualityLines()]],mechanics=[];
+ for(const id of ['fvc','fev1','ratio'])if(v[id])mechanics.push(meas(id));
+ if(v.bd==='indet')mechanics.push('Bronchodilator responsiveness testing is not reliably interpretable.');else if(['sig','nsig'].includes(v.bd))mechanics.push(P.bd[v.bd]);else if(v.bd==='np')mechanics.push('Bronchodilator responsiveness testing not performed.');
+ if(mechanics.length)secs.push(['MECHANICS:',mechanics]);
+ const loop=[];const specificLoop=!!v.fvlFlow||v.fvlOther.length>0;if(v.fvlShape==='norm')loop.push(P.fvlShape.norm);else if(v.fvlShape==='narrow'&&!specificLoop)loop.push(P.fvlShape.narrow);
+ if(v.fvlFlow)loop.push(P.fvlFlow[v.fvlFlow]);for(const k of v.fvlOther)loop.push(P.fvlOther[k]);
+ if(loop.length)secs.push(['FLOW VOLUME LOOP:',loop]);
+ const lv=[];
+ if(v.tlc==='np'){if(v.dlco!=='np')lv.push('Not performed.');}else if(v.tlc){lv.push(meas('tlc'));if(v.rv)lv.push(P.rv[v.rv]);for(const k of v.lvRatios)lv.push(P.lvRatios[k]);if(S.z.tlc!=null)lv.push('TLC z-score: '+S.z.tlc.toFixed(2)+'.');}
+ if(lv.length)secs.push(['LUNG VOLUMES:',lv]);
+ if(v.dlco){const dl=[];
+ if(v.dlco==='np'){if(v.tlc!=='np')dl.push('Not performed.');}
+ else if(v.q_dl==='bad'||v.dlcoQual.includes('tech'))dl.push('DLCO maneuvers are unusable; the measured result is not reliably interpretable.');
+ else if(v.dlco==='norm'&&v.q_hb==='yes')dl.push('Diffusing capacity is normal when adjusted for hemoglobin.');
+ else {dl.push(meas('dlco'));if(v.q_hb==='no')dl.push('Not adjusted for hemoglobin.');else if(v.q_hb==='yes')dl.push('Adjusted for hemoglobin.');}
+ if(dl.length)secs.push(['DIFFUSING CAPACITY FOR CARBON MONOXIDE:',dl]);}
+ const it=[...c.sentences];if(v.effortStmt==='yes')it.push(EFFORT_SENT);if(v.bmiHigh==='hi'&&['res','mixed'].includes(c.pattern))it.push(OBESITY_NOTE);{const lvx=[];if(v.extraStmts.includes('airtrap'))lvx.push('air trapping');if(v.extraStmts.includes('hyper'))lvx.push('hyperinflation');if(lvx.length)it.push('Static lung volumes show '+andJoin(lvx)+'.');}it.push(...nearLimitText(v,c));if((v.fvc||v.fev1||v.ratio)&&!v.q_pre)it.unshift('Spirometric classification is conditional on adequate test quality; quality has not been verified in this report.');if(document.getElementById('referenceName')?.value.trim())it.push('Reference equations: '+document.getElementById('referenceName').value.trim()+'.');
+
+
+ if(['sig','nsig'].includes(v.bd)&&settings.repeatBD)it.push(P.bd[v.bd]);
+ if(v.bd==='nsig')it.push('This does not preclude clinical efficacy of inhaled bronchodilators.');
+ if(v.q_post==='bad'&&['sig','nsig'].includes(v.bd))it.push('Bronchodilator responsiveness cannot be reliably assessed because post-bronchodilator spirometry is unusable.');
+ if(v.dlco==='dec'&&v.q_dl!=='bad'&&!v.dlcoQual.includes('tech')){
+  if(['normal','normmv'].includes(c.pattern)){it.push('There is an isolated '+(gradeWord('dlco')?gradeWord('dlco')+' ':'')+'reduction in diffusing capacity relative to the measured spirometry and TLC.');if(!mechanismDetail(v))it.push(DLCO_DIFFERENTIAL);}
+  else{it.push(meas('dlco'));if(c.pattern==='normalspiro'&&!mechanismDetail(v))it.push(DLCO_DIFFERENTIAL);}
+  if(v.q_dl==='limited'||v.q_vi==='bad')it.push('The diffusing-capacity result requires caution because of technical limitations.');
+ }
+ if((v.dlco==='dec'||v.dlco==='inc')&&v.q_dl!=='bad'&&!v.dlcoQual.includes('tech'))it.push(...dlcoDetailSentences(v));it.push(...flatteningText(v));
+ if(v.prior==='none')it.push('No prior study is available for comparison.');
+ else if(v.prior==='comp'||v.prior==='same'){const date=S.priorDate.trim()||'[prior date not entered]';it.push('Compared with '+date+': '+(v.prior==='same'?'no significant change.':S.priorText.trim()||'[comparison not entered]'));if(v.tech)it.push(P.tech[v.tech]);}
+ if(S.comments.trim())it.push(S.comments.trim());
+ if(it.length)secs.push(['INTERPRETATION:',it]);return secs;
+}
+function sectionsToText(secs){
+  const sep = settings.gap ? '\n\n' : '\n';
+  return secs.map(([h,arr])=>(!h||(document.getElementById('includeHeaders')?.checked===false && h!=='INTERPRETATION:')?'':h+'\n')+join(arr)).join(sep);
+}
+function plain(s){ return s.split(PH).join(''); }
+function generatedText(){ return plain(sectionsToText(buildSections())); }
+function interpText(){ if(S.v.unusableStudy)return UNUSABLE_STATEMENT; const s = buildSections().find(x=>x[0]==='INTERPRETATION:'); return s ? plain(join(s[1])) : ''; }
+
+/* =====================================================================
+   CHECKS (ERS/ATS 2021 consistency)
+   ===================================================================== */
+function checks(){
+ const v=S.v,z=S.z,c=clinical(),out=[];const W=(l,t)=>out.push([l,escapeHtml(t)]);
+ if(v.unusableStudy)return [['info',escapeHtml('Statement-only report selected: findings below are ignored and nothing else is printed.')]];
+ for(const id of ['fvc','fev1','ratio'])if(!v[id])W('err',ROW[id].label+' observation is missing.');
+ if(!v.bd)W('warn','BDR not assessed: select a result or Not performed.');
+ if(!v.tlc)W('warn','Lung-volume status not entered; do not assume normal.');
+ if(!v.dlco)W('warn','DLCO status not entered; do not assume normal.');
+ if(!v.prior)W('warn','Prior-study availability has not been checked.');
+ if(qualityLines().some(t=>/not assessed|requires review/.test(t)))W('warn','Quality review incomplete; limitations remain visible in the report.');
+ for(const [id,val]of Object.entries(z)){if(id==='raw'||val==null)continue;if(!Number.isFinite(val))W('err','Invalid z-score: '+id);if(['fvc','fev1','ratio','tlc','rv','dlco'].includes(id)&&v[id]&&v[id]!==classify(val,['tlc','rv','dlco','fvc','fev1'].includes(id)))W('err','Entered '+id+' z-score conflicts with selected category.');if(Math.abs(val+1.645)<0.15||(['tlc','rv','dlco','rvtlc','frctlc'].includes(id)&&Math.abs(val-1.645)<0.15))W('info',id+' is close to a reference limit. The 0.15-z highlight is a UI reminder, not a guideline-defined gray zone. Use the Near limit button in that section if you want it noted in the interpretation.');}
+ for(const k of ['rvtlc','frctlc'])if(z[k]!=null&&(z[k]>1.645)!==v.lvRatios.includes(k)&&v.tlc!=='np')W('err',k+' z-score conflicts with selected ratio.');
+ if(v.primary!==c.pattern)W('err','Selected pattern is not supported by the entered observations; restore automatic suggestion or correct the evidence.');
+ if(!c.pattern&&v.q_pre!=='bad')W('warn','A complete physiological pattern cannot be assigned from these observations.');
+ if(v.q_pre==='bad')W('warn','Spirometry unusable: no reliable spirometric classification is emitted.');
+ if(v.q_lv==='bad')W('warn','Lung-volume measurements unusable: restriction cannot be established from them.');
+ if(v.q_dl==='bad'||v.dlcoQual.includes('tech'))W('warn','DLCO unusable: diagnostic interpretation and grading suppressed.');
+ if(v.q_dl==='ok'&&v.dlcoQual.includes('tech'))W('err','DLCO marked both acceptable and unusable.');
+ if(v.q_hb==='yes'&&v.dlcoQual.includes('hb'))W('err','Conflicting Hb adjustment selections.');
+ const vi=ivcRatio();if(v.q_vi==='ok'&&vi!=null&&vi<0.9)W('err','Inspired volume selected ≥90% but entered IVC/VC is below 90%.');
+ if(v.q_vi==='alt'&&vi!=null&&vi<0.85)W('err','Alternative DLCO volume criterion requires IVC/VC ≥85%.');
+ if(v.q_dl==='ok'&&(v.q_vi==='bad'||(vi!=null&&vi<0.9&&v.q_vi!=='alt')))W('err','Overall DLCO acceptability conflicts with inspired-volume assessment.');
+ if(v.q_dl==='ok'&&v.q_limits.includes('timing'))W('err','DLCO marked acceptable despite an explicit timing limitation.');
+ if(['q_pre','q_post','q_lv','q_dl'].some(id=>v[id]==='limited'))W('warn','Usable but limited measurements: verify which conclusions remain supportable.');
+ if(document.getElementById('spiroBasis')?.value==='post'&&v.bd==='np')W('err','Post-BD basis conflicts with BDR marked not performed.');
+ for(const phase of ['pre','post']){const fev=num(document.getElementById('bd_fev1_'+phase)?.value),fvc=num(document.getElementById('bd_fvc_'+phase)?.value);if(fev!=null&&fvc!=null&&fev>fvc+0.01)W('err','Entered '+phase+' FEV1 exceeds FVC; verify units, source and maneuver selection.');}
+ const r=bdCalc();const positive=Object.values(r).some(x=>x!=null&&x>10+1e-10),both=r.fev1!=null&&r.fvc!=null;
+ const hasBD=Object.keys(z.raw||{}).some(k=>k.startsWith('bd_')&&String(z.raw[k]).trim()!=='');
+ if(hasBD&&(!both&&!positive))W('warn','Incomplete numeric BDR: one negative channel does not establish a negative overall response; review the other parameter.');
+ if(positive&&!['sig','indet'].includes(v.bd))W('err','Numeric BDR shows a response >10% predicted, conflicting with selected BDR.');
+ if(both&&!positive&&!['nsig','indet'].includes(v.bd))W('err','Both numeric BDR channels are ≤10%, conflicting with selected BDR.');
+ if(hasBD&&v.bd==='np')W('err','BDR marked not performed but numeric BDR entries are present.');
+ if((v.q_post==='bad'||v.q_pre==='bad')&&['sig','nsig'].includes(v.bd))W('err','Do not report a positive or negative BDR from unusable post-BD measurements. Select Uninterpretable and describe the limitation in comments.');
+ for(const [id,val]of Object.entries(z.raw||{})){if(String(val).trim()!==''&&(num(val)==null||num(val)<=0))W('err',id+' must be a positive number.');}
+ for(const id of ['ratio','fev1','fvc','tlc','rv','rvtlc','frctlc','dlco']){const el=document.getElementById('z_'+id);if(el?.value.trim()&&num(el.value)==null)W('err','Invalid numeric entry: '+id);}
+ if(v.dlco==='dec'&&S.z.dlco!=null&&v.dlcoSev&&SEV_WORD[v.dlcoSev]!==impairment(S.z.dlco))W('err','Manual DLCO grade conflicts with entered DLCO z-score.');
+ if(v.prior==='comp'&&(!S.priorDate.trim()||!S.priorText.trim()))W('err','Comparison requires date and a description of change.');
+ if(v.prior==='same'&&!S.priorDate.trim())W('err','Comparison requires a prior date.');
+ if(v.q_pre==='ok'&&v.q_limits.some(k=>['effort','cough','leak','end','repeat'].includes(k)))W('warn','Specific artifact selected with acceptable spirometry: verify that it affects only discarded trials or revise the quality summary.');
+
+ for(const id of ['fvc','fev1','ratio','tlc']){const g=SEV_WORD[v[GRADE_KEYS[id]]];if(v[id]==='dec'&&g&&Number.isFinite(z[id])&&g!==impairment(z[id]))W('err',ROW[id].label+' modifier conflicts with the entered z-score. Clear one or select the matching grade.');}
+ if(needsFev1Grade(v,c)&&!gradeCode('fev1'))W('warn','Select an FEV1 Mild/Moderate/Severe modifier so the obstruction conclusion carries severity.');
+ if(needsTlcGrade(v,c)&&!gradeCode('tlc'))W('warn','Select a TLC Mild/Moderate/Severe modifier so the restriction conclusion carries severity.');
+ {const seen=new Set();for(const [t,tip,lvl] of attentionItems(v,c)){if(seen.has(tip))continue;seen.add(tip);W(lvl||'warn',tip);}}
+ if(v.effortStmt==='yes'&&!(v.fev1==='dec'&&v.fvc==='dec'))W('warn','The effort/weakness statement is selected, but FEV1 and FVC are not both marked decreased.');
+ if(v.effortStmt==='yes'&&v.q_pre==='ok')W('warn','Spirometry quality is marked acceptable and repeatable, but the report blames submaximal effort or weakness. Reconcile the two (a reduced PEF supports this explanation).');
+ if(v.qGrade==='ab'&&(v.q_pre==='limited'||v.q_lv==='limited'||v.q_dl==='limited'||v.q_post==='limited'||v.q_limits.length))W('warn','Overall grade A/B is selected, but a test or limitation is marked limited.');
+ if((v.qGrade==='ce'||v.qGrade==='u')&&v.q_pre==='ok'&&v.q_lv!=='limited'&&v.q_dl!=='limited'&&v.q_post!=='limited'&&!v.q_limits.length)W('info','Overall grade C–E / U is selected while every test row is marked acceptable. Name the limiting test or limitation for the reader.');
+ if(v.dlco==='dec'&&v.dlcoVA==='low'&&v.dlcoKCO==='norm')W('info','A normal KCO with a low VA should not be read as normal gas transfer.');
+ if(v.dlco==='dec'&&!v.dlcoHgb)W('info','Hemoglobin effect on the reduced DLCO is not specified (optional).');
+ if(v.q_vi==='bad')W('info','A reduced inspired volume does not always mean poor quality: if the previous exhalation was incomplete and VA is still accurate, the DLCO may be usable. Consider marking the DLCO as limited instead of unusable.');
+ if(v.bmiHigh==='hi'&&!['res','mixed'].includes(c.pattern))W('info','High BMI only adds a sentence to a restrictive or mixed conclusion.');
+ if(v.fvlShape==='norm'&&(v.fvlFlow||v.fvlOther.length))W('err','Flow-volume loop is marked normal but a specific abnormality is selected.');
+ if(v.extraStmts.includes('airtrap')&&!airTrapSupported(v))W('err','Air trapping is selected but RV is not marked increased, and RV/TLC is not increased with a non-reduced TLC. Restore the automatic setting or correct the lung-volume findings.');
+ if(v.extraStmts.includes('hyper')&&!hyperSupported(v))W('err','Hyperinflation is selected but TLC is not marked increased. Restore the automatic setting or correct the lung-volume findings.');
+ if(v.q_pre==='bad')W('info','Spirometry is marked unusable. For a statement-only report, use "Unable to produce acceptable spirometry" in the Quality card.');
+ for(const msg of nearConflicts(v))W(msg[0],msg[1]);
+ return out;
+}
+
+/* =====================================================================
+   Z-SCORE QUICK ENTRY
+   ===================================================================== */
+const ZFIELDS = [
+  ['ratio','FEV1/FVC'],['fev1','FEV1'],['fvc','FVC'],['tlc','TLC'],['rv','RV'],['rvtlc','RV/TLC'],['frctlc','FRC/TLC'],['dlco','DLCO']
+];
+function num(s){ if(s==null) return null; s = String(s).trim().replace(/[\u2212\u2013\u2014]/g,'-').replace(',', '.'); if(s===''||s==='-'||s==='.') return null; const n = Number(s); return isNaN(n)?null:n; }
+function classify(z, allowHigh){ if(z==null) return null; if(z<settings.lln) return 'dec'; if(allowHigh && z>-settings.lln) return 'inc'; return 'norm'; }
+function zApply(field){
+  if(GRADE_KEYS[field]&&S.z[field]!=null)S.v[GRADE_KEYS[field]]=null;
+  const z = S.z; const lln = settings.lln;
+  if(z[field]==null && S.fromZ[field] && ROW[field]){S.v[field]=ROW[field].multi?[]:null;delete S.fromZ[field];}
+  if(z[field]==null && ['rvtlc','frctlc'].includes(field)){S.v.lvRatios=S.v.lvRatios.filter(x=>x!==field);}
+  const setRow = (id,val)=>{ S.v[id]=val; S.fromZ[id]=true; };
+  const setMulti = (id,opt,on)=>{ const a = S.v[id].filter(x=>x!==opt); if(on) a.push(opt); S.v[id]=a; S.fromZ[id]=true; };
+  switch(field){
+    case 'ratio': if(z.ratio!=null) setRow('ratio', classify(z.ratio,false)); break;
+    case 'fev1': if(z.fev1!=null) setRow('fev1', classify(z.fev1,true)); break;
+    case 'fvc': if(z.fvc!=null) setRow('fvc', classify(z.fvc,true)); break;
+    case 'tlc': if(z.tlc!=null) setRow('tlc', classify(z.tlc,true)); break;
+    case 'rv': if(z.rv!=null) setRow('rv', classify(z.rv,true)); break;
+    case 'rvtlc': if(z.rvtlc!=null) setMulti('lvRatios','rvtlc', z.rvtlc>-lln); break;
+    case 'frctlc': if(z.frctlc!=null) setMulti('lvRatios','frctlc', z.frctlc>-lln); break;
+    case 'dlco': if(z.dlco!=null){ setRow('dlco', classify(z.dlco,true)); const s = sevFromZ(z.dlco); S.v.dlcoSev = s; if(s) S.fromZ.dlcoSev=true; } break;
+  }
+}
+function bdCalc(){
+ const g=k=>num(document.getElementById(k)?.value),r={};
+ for(const m of ['fev1','fvc']){const pre=g('bd_'+m+'_pre'),post=g('bd_'+m+'_post'),pred=g('bd_'+m+'_pred');r[m]=pre>0&&post>0&&pred>0?(post-pre)*100/pred:null;}
+ return r;
+}
+function bdApply(){
+ const r=bdCalc();const sig=Object.values(r).some(x=>x!=null&&x>10+1e-10);
+ if(sig){S.v.bd='sig';S.fromZ.bd=true;}
+ else if(r.fev1!=null&&r.fvc!=null){S.v.bd='nsig';S.fromZ.bd=true;}
+ else {S.v.bd=null;delete S.fromZ.bd;}
+}
+function ivcRatio(){
+ const i=num(document.getElementById('ivc')?.value),v=num(document.getElementById('vcmax')?.value);return i>0&&v>0?i/v:null;
+}
+function ivcApply(){ S.v.q_vi=null; }
+
+/* =====================================================================
+   RENDER
+   ===================================================================== */
+const $ = s=>document.querySelector(s);
+const inputsEl = $('#inputs');
+
+function keyLabel(label, k){
+  const low = label.toLowerCase();
+  let i = -1;
+  // prefer a word-initial letter
+  const m = low.match(new RegExp('(^|[\\s/:→])'+k));
+  if(m) i = m.index + m[1].length; else i = low.indexOf(k);
+  if(i<0) return `${label} <span style="opacity:.6">(${k.toUpperCase()})</span>`;
+  return label.slice(0,i)+'<u>'+label[i]+'</u>'+label.slice(i+1);
+}
+function buildDOM(){
+  let html = '';
+  // z-score panel
+  html += `<details class="card zp" id="zpanel" ${settings.zOpen?'open':''}>
+    <summary class="card-h"><span class="chev">▸</span><h2>Quick entry from z-scores</h2><span class="secnum">optional · <kbd>G</kbd></span>
+      <span class="actions"><button class="linkbtn" id="zClear" type="button">Clear values</button></span></summary>
+    <div class="zgrid">${ZFIELDS.map(([k,l])=>`<div class="zcell"><label for="z_${k}">${l} z<span class="res" id="zr_${k}"></span></label><input class="inp zin" id="z_${k}" data-z="${k}" inputmode="decimal" autocomplete="off" placeholder="—"></div>`).join('')}</div>
+    <div class="zsub">
+      <h3>Bronchodilator response (litres)</h3>
+      <div class="bdgrid">
+        <span></span><span class="hd">Pre</span><span class="hd">Post</span><span class="hd">Predicted</span><span class="hd calc-h">% of predicted</span>
+        <span>FEV1</span><input class="inp bdin" id="bd_fev1_pre" inputmode="decimal" autocomplete="off"><input class="inp bdin" id="bd_fev1_post" inputmode="decimal" autocomplete="off"><input class="inp bdin" id="bd_fev1_pred" inputmode="decimal" autocomplete="off"><span class="calc" id="bdr_fev1">—</span>
+        <span>FVC</span><input class="inp bdin" id="bd_fvc_pre" inputmode="decimal" autocomplete="off"><input class="inp bdin" id="bd_fvc_post" inputmode="decimal" autocomplete="off"><input class="inp bdin" id="bd_fvc_pred" inputmode="decimal" autocomplete="off"><span class="calc" id="bdr_fvc">—</span>
+      </div>
+      <h3>DLCO maneuver adequacy (litres)</h3>
+      <div class="textrow">
+        <div class="field"><label for="ivc">IVC on DL maneuver</label><input class="inp bdin" id="ivc" inputmode="decimal" style="width:110px" autocomplete="off"></div>
+        <div class="field"><label for="vcmax">Larger of FVC / VC</label><input class="inp bdin" id="vcmax" inputmode="decimal" style="width:110px" autocomplete="off"></div>
+        <span class="calc" id="ivcres" style="align-self:flex-end;padding-bottom:6px">—</span>
+      </div>
+    </div>
+  </details>`;
+  // sections
+  SECTIONS.forEach((sec, si)=>{
+    html += `<div class="card" data-sec="${sec.id}"><div class="card-h"><span class="secnum">${si+1}</span><h2>${sec.title}${sec.sub?` <span style="text-transform:none;letter-spacing:0;font-weight:400">· ${sec.sub}</span>`:''}</h2>`;
+    if(sec.auto) html += `<span class="actions"><button class="linkbtn" id="resetAuto" type="button">Reset all to auto</button></span>`;
+    html += `</div>`;
+    ROWS.filter(r=>r.sec===sec.id).forEach(r=>{
+      const idx = ROWS.indexOf(r);
+      html += `<div class="row" tabindex="0" data-row="${r.id}" data-idx="${idx}" role="${r.multi?'group':'radiogroup'}" aria-label="${r.label}">
+        <div class="lbl">${r.label}${r.sub?`<span class="sub">${r.sub}</span>`:''}<span class="tags" id="tags_${r.id}"></span></div>
+        <div class="opts">${r.opts.map(([v,l,k],oi)=>`<button type="button" tabindex="-1" class="opt${r.multi?' multi':''}" data-v="${v}" role="${r.multi?'checkbox':'radio'}" aria-checked="false"><span class="k">${oi+1}</span><span class="t">${keyLabel(l,k)}</span></button>`).join('')}</div>
+      </div>`;
+      if(r.id==='prior'){
+        html += `<div class="row" data-norow style="cursor:default"><div class="lbl"><span class="sub">Details</span></div>
+          <div class="textrow"><div class="field"><label for="priorDate">Date</label><input class="inp" id="priorDate" placeholder="e.g. 03/14/2025" style="width:150px" autocomplete="off"></div>
+          <div class="field" style="flex:1;min-width:200px"><label for="priorText">Change since prior (completes the sentence)</label><input class="inp" id="priorText" placeholder="e.g. FEV1 has declined by 250 mL (9%)." autocomplete="off"></div></div></div>`;
+      }
+    });
+    if(sec.id==='quality')html += "<details style=\"padding:10px\"><summary>Quality checklist (not copied)</summary><p>Assess FEV1 and FVC acceptability separately, pre/post separately. Review start, cough, glottic closure, leak, maximal inspiration and end of forced expiration; usable FEV1 does not guarantee usable FVC. For age &gt;6 years, two largest acceptable FEV1 values and two largest acceptable FVC values should each be within 150 mL; goal \u22653 acceptable measurements. Limited-quality measurements require clinician judgment.</p><p>DLCO: \u226585% of VI inhaled in &lt;4 s; breath hold 10\u00b12 s; sample collection \u22644 s; review leaks and M\u00fcller/Valsalva artifacts. \u22652 acceptable values within 2 mL/min/mmHg (0.67 mmol/min/kPa). VI \u226590% of largest same-session VC; \u226585% exception requires VA within 200 mL or 5%, whichever greater, of highest VA among acceptable maneuvers. Inspired-volume adequacy alone is not overall acceptability. Hb-adjustment status is independent of maneuver quality. The app records review; it cannot inspect raw curves.</p><p>For lung volumes, use technique-specific quality review and current laboratory SOPs. Physiological classification is conditional on usable measurements.</p></details>";
+    if(sec.id==='comp'){
+      html += `<div class="row" data-norow><div class="lbl">Free-text comment<span class="sub">appended last</span></div><textarea class="inp" id="comments" rows="2" placeholder="Optional, e.g. technical limitations noted by the technician."></textarea></div>`;
+    }
+    html += `</div>`;
+  });
+  inputsEl.innerHTML = html;
+}
+
+function renderRows(){
+  ROWS.forEach((r,idx)=>{
+    const el = inputsEl.querySelector(`[data-row="${r.id}"]`);
+    const dis = isDisabled(r.id);
+    el.classList.toggle('disabled', dis);
+    el.classList.toggle('current', idx===cur);
+    el.setAttribute('aria-disabled', dis?'true':'false');
+    el.querySelectorAll('.opt').forEach(b=>{
+      const on = has(r.id, b.dataset.v);
+      b.classList.toggle('on', on); b.setAttribute('aria-checked', on?'true':'false');
+    });
+    const tags = document.getElementById('tags_'+r.id);
+    let t = '';
+    if(r.auto){ t += S.autoF[r.id] ? '<span class="tag auto">auto</span>' : `<span class="tag manual" data-reauto="${r.id}" title="Restore automatic suggestion">manual ↺</span>`; }
+    if(S.fromZ[r.id]) t += '<span class="tag z">from z</span>';
+    if(tags.dataset.h!==t){ tags.innerHTML = t; tags.dataset.h = t; }
+  });
+}
+function renderZ(){
+  ZFIELDS.forEach(([k])=>{
+    const z = S.z[k], el = document.getElementById('zr_'+k);
+    if(z==null){ el.textContent=''; el.className='res'; return; }
+    let c = z<settings.lln ? 'lo' : (z>-settings.lln ? 'hi' : 'nl');
+    let t = c==='lo' ? '< LLN' : c==='hi' ? '> ULN' : 'normal';
+    if(['fev1','dlco'].includes(k) && c==='lo'){ const s=sevFromZ(z); t = SEV_WORD[s]; }
+    if((k==='ratio'||k==='fev1'||k==='fvc') && c==='hi') { t='normal'; c='nl'; }
+    el.textContent = t; el.className = 'res '+c;
+  });
+  const r = bdCalc();
+  for(const m of ['fev1','fvc']){
+    const el = document.getElementById('bdr_'+m);
+    if(r[m]==null){ el.innerHTML='—'; continue; }
+    const s = r[m]>10+1e-10;
+    el.innerHTML = `<b>${r[m]>=0?'+':''}${r[m].toFixed(1)}%</b> ${s?'<span class="sig">&gt;10%</span>':'≤10%'}`;
+  }
+  const iv = ivcRatio(), ie = document.getElementById('ivcres');
+  if(iv==null) ie.innerHTML='—';
+  else ie.innerHTML = `IVC/VC <b>${iv.toFixed(2)}</b> ${iv<0.85?'below 85%':iv<0.9?'85–<90%: verify alternative VA criterion':'≥90% volume criterion only'}`;
+}
+function escapeHtml(s){ return s.replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function renderReport(){
+  const rep = document.getElementById('report');
+  if(editing) return;
+  const txt = sectionsToText(buildSections());
+  if(!txt){ rep.innerHTML = '<span class="empty">Start marking findings; the report builds here as you go.\n\nTip: press ⇧A for a normal study, or type z-scores into the quick-entry panel.</span>'; return; }
+  const parts = txt.split(PH);
+  let html = parts.map((p,i)=> i%2 ? `<span class="ph">${escapeHtml(p)}</span>` : escapeHtml(p)).join('');
+  {const all=attentionItems(S.v,clinical()),items=all.filter(a=>!all.some(b=>b[0]!==a[0]&&b[0].includes(a[0])));for(const [txt,tip] of items){const e=escapeHtml(txt),tp=escapeHtml(tip+' (Highlight is display-only and is not copied.)').replace(/"/g,'&quot;');html=html.split(e).join('<mark class="caveat" title="'+tp+'">'+e+'</mark>');}}
+  rep.innerHTML = html;
+}
+function renderChecks(){
+  const list = checks();
+  const order = {err:0, warn:1, info:2};
+  list.sort((a,b)=>order[a[0]]-order[b[0]]);
+  document.getElementById('warns').innerHTML = list.map(([l,m])=>`<div class="w ${l}">${m}</div>`).join('');
+  const ne = list.filter(x=>x[0]==='err').length, nw = list.filter(x=>x[0]==='warn').length;
+  document.getElementById('wcount').textContent = list.length ? `${ne} to fix · ${nw} to review · ${list.length-ne-nw} notes` : 'No issues';
+  return {ne, nw};
+}
+function renderFmt(){
+  document.getElementById('fmtPara').classList.toggle('on', settings.fmt==='para');
+  document.getElementById('fmtLines').classList.toggle('on', settings.fmt==='lines');
+}
+function render(){
+  applyAuto();
+  renderRows(); renderZ(); renderReport(); renderChecks(); renderFmt(); renderLearning(); renderWorkflow();
+  if(editing) document.getElementById('editMsg').textContent = 'Hand-edited report: verify that it still matches the structured observations. Free text is not automatically validated.';
+}
+
+/* =====================================================================
+   ACTIONS
+   ===================================================================== */
+function selectOpt(id, val, fromKey){
+  const r = ROW[id]; if(isDisabled(id)) return;
+  if(GRADE_KEYS[id]){
+    if(val.startsWith('dec_')){const g=val.slice(4);if(S.v[id]==='dec'&&S.v[GRADE_KEYS[id]]===g){S.v[id]=null;S.v[GRADE_KEYS[id]]=null;}else{S.v[id]='dec';S.v[GRADE_KEYS[id]]=g;}}
+    else{S.v[GRADE_KEYS[id]]=null;S.v[id]=S.v[id]===val?null:val;}
+    if(r.auto)S.autoF[id]=false;delete S.fromZ[id];render();if(fromKey&&settings.advance&&S.v[id]!==null)moveRow(1,true);return;
+  }
+  if(r.multi){
+    const a = S.v[id]; S.v[id] = a.includes(val) ? a.filter(x=>x!==val) : a.concat(val);
+  } else {
+    S.v[id] = S.v[id]===val ? null : val;
+  }
+  if(r.auto) S.autoF[id] = false;
+  delete S.fromZ[id];
+  // focus comparison inputs when "Compared to…" is chosen
+  render();
+  if(id==='prior' && S.v.prior==='comp' && fromKey){ document.getElementById('priorDate').focus(); return; }
+  if(fromKey && !r.multi && settings.advance && S.v[id]!==null){
+    if(id==='bd' && presetPending){ presetPending=false; setCur(ROWS.findIndex(x=>x.id==='prior')); return; }
+    moveRow(1,true);
+  }
+}
+let presetPending = false;
+function clearRow(id){
+ if(GRADE_KEYS[id])S.v[GRADE_KEYS[id]]=null;
+  const r = ROW[id];
+  S.v[id] = r.multi ? [] : null; delete S.fromZ[id];
+  if(r.auto) S.autoF[id] = true;
+  render();
+}
+function reAuto(id){ S.autoF[id] = true; render(); }
+function setCur(i, focus=true){
+  cur = Math.max(0, Math.min(ROWS.length-1, i));
+  renderRows();
+  const el = inputsEl.querySelector(`[data-idx="${cur}"]`);
+  if(focus && el){ el.focus({preventScroll:true}); el.scrollIntoView({block:'nearest', behavior:'smooth'}); }
+}
+function moveRow(d,skipOptional=false){
+  let i = cur;
+  for(let n=0; n<ROWS.length; n++){
+    i += d; if(i<0||i>=ROWS.length) return setCur(cur);
+    if(!isDisabled(ROWS[i].id)&&!(skipOptional&&ROWS[i].optional)) return setCur(i);
+  }
+}
+function moveSection(d){
+  const secIds = SECTIONS.map(s=>s.id);
+  let si = secIds.indexOf(ROWS[cur].sec) + d;
+  while(si>=0 && si<secIds.length){
+    const first = ROWS.findIndex(r=>r.sec===secIds[si] && !isDisabled(r.id));
+    if(first>=0) return setCur(first);
+    si += d;
+  }
+}
+function presetNormal(full){
+  undoSnap = clone(S);S.v.unusableStudy=false;
+  Object.assign(S.v, { fvc:'norm', fev1:'norm', ratio:'norm', fvlShape:'norm', fvlFlow:null, fvlOther:[] });
+  if(full) Object.assign(S.v, { tlc:'norm', rv:'norm', lvRatios:[], dlco:'norm', dlcoSev:null });
+  else Object.assign(S.v, { tlc:'np', rv:null, lvRatios:[], dlco:'np', dlcoSev:null });
+  ['fvc','fev1','ratio','fvlShape','tlc','rv','dlco'].forEach(k=>delete S.fromZ[k]);
+  render();
+  const bdIdx = ROWS.findIndex(r=>r.id==='bd');
+  if(!S.v.bd){ presetPending = true; setCur(bdIdx); } else setCur(ROWS.findIndex(r=>r.id==='prior'));
+  toast(full ? 'Normal findings entered. Quality, BDR, Hb and prior studies still require review.' : 'Normal spirometry and loop applied; lung volumes and DLCO marked not performed. Choose the bronchodilator result.', true);
+}
+function newPatient(){
+  clearPreview();
+  undoSnap=clone(S);undoSnap.context={reference:document.getElementById('referenceName').value,basis:document.getElementById('spiroBasis').value,edited:editing?document.getElementById('report').value:null};
+  const zOpen = document.getElementById('zpanel').open;
+  S=blankState();presetPending=false;if(editing){editing=false;const p=document.createElement('pre');p.id='report';p.className='report';document.getElementById('report').replaceWith(p);document.getElementById('outcard').classList.remove('editing');document.getElementById('btnEdit').textContent='Edit text';} approvedFingerprint=null;document.getElementById('referenceName').value='';document.getElementById('spiroBasis').value='pre';document.getElementById('reviewAck').checked=false;
+  document.querySelectorAll('.zin,.bdin').forEach(i=>i.value='');
+  document.getElementById('priorDate').value=''; document.getElementById('priorText').value=''; document.getElementById('comments').value='';
+  document.getElementById('copyStatus').textContent=''; document.getElementById('copyStatus').className='status';
+  render(); setCur(ROWS.findIndex(r=>r.id==='fvc'),false); scrollToTop();
+  if(document.activeElement&&document.activeElement.blur&&!document.activeElement.matches('body'))document.activeElement.blur();
+  toast('Cleared for the next patient.', true);
+}
+function undo(){
+  if(!undoSnap) return;
+  S = undoSnap; undoSnap = null;
+  // restore inputs
+  for(const [k] of ZFIELDS){ document.getElementById('z_'+k).value = S.z[k]==null?'':S.z[k]; }
+  ['bd_fev1_pre','bd_fev1_post','bd_fev1_pred','bd_fvc_pre','bd_fvc_post','bd_fvc_pred','ivc','vcmax'].forEach(id=>{ document.getElementById(id).value = (S.z.raw&&S.z.raw[id])||''; });
+  document.getElementById('priorDate').value=S.priorDate; document.getElementById('priorText').value=S.priorText; document.getElementById('comments').value=S.comments;
+  if(S.context){const context=S.context;delete S.context;document.getElementById('referenceName').value=context.reference;document.getElementById('spiroBasis').value=context.basis;if(context.edited!=null){setEditing(true);document.getElementById('report').value=context.edited;}} approvedFingerprint=null;render();hideToast();
+}
+let toastT;
+function toast(msg, canUndo){
+  $('#toastMsg').textContent = msg; $('#toastUndo').style.display = canUndo?'':'none';
+  $('#toast').classList.add('show'); clearTimeout(toastT); toastT = setTimeout(hideToast, 7000);
+}
+function hideToast(){ $('#toast').classList.remove('show'); }
+
+async function copyText(text,label){
+ const status=document.getElementById('copyStatus');if(!canCopy())return false;if(!text.trim()){status.textContent='Nothing to copy.';return false;}
+ let ok=false;try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);ok=true;}}catch(e){}
+ if(!ok){const ta=document.createElement('textarea');ta.value=text;ta.readOnly=true;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy');}catch(e){}ta.remove();}
+ status.textContent=ok?label+' copied as plain text.':'Copy failed; form preserved. Browser permissions may block clipboard access.';status.className=ok?'status ok':'status';return ok;
+}
+function copyAll(){
+  if(!canCopy())return;
+  const text = editing ? document.getElementById('report').value : generatedText();
+  copyText(text, 'Report');
+}
+function copyInterp(){
+  if(!canCopy())return;
+  if(editing){ const t = document.getElementById('report').value; const i = t.indexOf('INTERPRETATION:'); copyText(i>=0 ? t.slice(i+15).trim() : t, 'Interpretation'); return; }
+  copyText(interpText(), 'Interpretation');
+}
+function setEditing(on){
+ if(on&&editing)return;
+ if(!on){
+  if(editing&&document.getElementById('report').value!==generatedText()&&!confirm('Discard hand edits and regenerate from current observations?'))return;
+  editing=false;const pre=document.createElement('pre');pre.id='report';pre.className='report';pre.setAttribute('aria-live','polite');document.getElementById('report').replaceWith(pre);
+ }else{
+  editing=true;const ta=document.createElement('textarea');ta.id='report';ta.className='report';ta.value=generatedText();ta.spellcheck=true;ta.addEventListener('input',()=>renderLearning());document.getElementById('report').replaceWith(ta);editBaseline=fingerprint(false);ta.focus();
+ }
+ document.getElementById('outcard').classList.toggle('editing',editing);document.getElementById('btnEdit').textContent=editing?'Discard edits / regenerate':'Edit text';renderReport();renderLearning();
+}
+
+/* =====================================================================
+   EVENTS
+   ===================================================================== */
+function bind(){
+  inputsEl.addEventListener('click', e=>{
+    const re = e.target.closest('[data-reauto]'); if(re){ reAuto(re.dataset.reauto); return; }
+    const opt = e.target.closest('.opt'); const row = e.target.closest('.row[data-row]');
+    if(row){ cur = +row.dataset.idx; }
+    if(opt && row){ selectOpt(row.dataset.row, opt.dataset.v, false); setCur(cur, false); }
+    else if(row){ setCur(cur); }
+  });
+  inputsEl.addEventListener('focusin', e=>{ const row = e.target.closest('.row[data-row]'); if(row && +row.dataset.idx!==cur){ cur = +row.dataset.idx; renderRows(); } });
+  document.getElementById('zpanel').addEventListener('toggle', e=>{ settings.zOpen = e.target.open; saveSettings(); });
+  document.getElementById('zClear').addEventListener('click', e=>{ e.preventDefault(); document.querySelectorAll('.zin,.bdin').forEach(i=>i.value=''); for(const id of Object.keys(S.fromZ)){if(ROW[id])S.v[id]=ROW[id].multi?[]:null;} S.z={};S.fromZ={};render(); });
+  document.querySelectorAll('.zin').forEach(inp=>{
+    inp.addEventListener('input', ()=>{ const k = inp.dataset.z; S.z[k] = num(inp.value); zApply(k); render(); });
+  });
+  document.querySelectorAll('.bdin').forEach(inp=>{
+    inp.addEventListener('input', ()=>{ S.z.raw = S.z.raw||{}; S.z.raw[inp.id] = inp.value; if(inp.id==='ivc'||inp.id==='vcmax') ivcApply(); else bdApply(); render(); });
+  });
+  const zOrder = [...document.querySelectorAll('.zin,.bdin')];
+  zOrder.forEach((inp,i)=>inp.addEventListener('keydown', e=>{
+    if(e.key==='Enter' && !e.metaKey && !e.ctrlKey){ e.preventDefault(); const nx = zOrder[i+(e.shiftKey?-1:1)]; if(nx) nx.focus(); else setCur(0); }
+  }));
+  document.getElementById('priorDate').addEventListener('input', e=>{ S.priorDate = e.target.value; render(); });
+  document.getElementById('priorText').addEventListener('input', e=>{ S.priorText = e.target.value; render(); });
+  document.getElementById('comments').addEventListener('input', e=>{ S.comments = e.target.value; render(); });
+  document.getElementById('priorDate').addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.metaKey && !e.ctrlKey){ e.preventDefault(); document.getElementById('priorText').focus(); } });
+  document.getElementById('priorText').addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.metaKey && !e.ctrlKey){ e.preventDefault(); setCur(ROWS.findIndex(r=>r.id==='tech')); } });
+  document.getElementById('resetAuto').addEventListener('click', ()=>{ Object.keys(S.autoF).forEach(k=>S.autoF[k]=true); render(); });
+
+  $('#btnNormal').onclick = ()=>presetNormal(true);
+  $('#btnNormSpiro').onclick = ()=>presetNormal(false);
+  $('#btnNew').onclick = newPatient;
+  $('#toastUndo').onclick = undo;
+  $('#btnCopy').onclick = copyAll;
+  $('#btnCopyInterp').onclick = copyInterp;
+  $('#fmtPara').onclick = ()=>{ settings.fmt='para'; saveSettings(); render(); };
+  $('#fmtLines').onclick = ()=>{ settings.fmt='lines'; saveSettings(); render(); };
+  $('#btnEdit').onclick = ()=>setEditing(!editing);
+  $('#btnRegen').onclick = ()=>setEditing(false);
+  $('#btnHelp').onclick = ()=>openModal('helpModal');
+  $('#btnSettings').onclick = ()=>openModal('setModal');
+  document.querySelectorAll('.modal').forEach(m=>{
+    m.addEventListener('click', e=>{ if(e.target===m || e.target.closest('[data-close]')) closeModals(); });
+  });
+  // settings controls
+  const sl=$('#setLLN');sl.value=String(settings.lln);sl.disabled=true;document.getElementById('setNP').disabled=true;document.getElementById('setNP').title='Explicitly marked not-performed tests are always reported in this release.';document.getElementById('setDlcoSev').disabled=true;document.getElementById('setDlcoSev').title='DLCO grade provenance is always shown when available.';sl.title='This release uses LLN −1.645 and ULN +1.645; other conventions require a separately validated configuration.';
+  sl.onchange = ()=>{ settings.lln = Number(sl.value); saveSettings(); ZFIELDS.forEach(([k])=>zApply(k)); render(); };
+  [['setRepeatBD','repeatBD'],['setNP','np'],['setAdvance','advance'],['setDlcoSev','dlcoSev'],['setGap','gap']].forEach(([id,k])=>{
+    const el = document.getElementById(id); el.checked = !!settings[k];
+    el.onchange = ()=>{ settings[k] = el.checked; saveSettings(); render(); };
+  });
+
+  document.addEventListener('keydown', onKey);
+}
+function openModal(id){ closeModals(); document.getElementById(id).classList.add('show'); }
+function closeModals(){ document.querySelectorAll('.modal.show').forEach(m=>m.classList.remove('show')); }
+function anyModal(){ return !!document.querySelector('.modal.show'); }
+
+function onKey(e){
+ if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();document.getElementById('findingSearch').focus();return;}
+  const t = e.target;
+  const typing = t && (t.tagName==='INPUT' || t.tagName==='TEXTAREA' || t.tagName==='SELECT');
+  // global copy
+  if((e.metaKey||e.ctrlKey) && e.key==='Enter'){ e.preventDefault(); copyAll(); return; }
+  if(anyModal()){ if(e.key==='Escape' || (e.key==='?' && !typing)){ e.preventDefault(); closeModals(); } return; }
+  if(typing){
+    if(e.key==='Escape'){ e.preventDefault(); t.blur(); setCur(cur); }
+    return;
+  }
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  const k = e.key;
+  if(e.shiftKey&&k==='Enter'){ e.preventDefault(); nextRequired(); return; }
+  if(e.shiftKey){
+    const map = { Q:()=>quickQuality('yes'), W:()=>quickQuality('no'), U:toggleUnusable, M:normalSpiroValues, O:()=>setTests('spiro'), C:copyAll, I:copyInterp, A:()=>presetNormal(true), S:()=>presetNormal(false), N:newPatient, Z:undo, L:()=>{ settings.fmt = settings.fmt==='para'?'lines':'para'; saveSettings(); render(); } };
+    const fn = map[k.toUpperCase()];
+    if(fn && /^[a-z]$/i.test(k)){ e.preventDefault(); fn(); return; }
+  }
+  if(k==='?'){ e.preventDefault(); openModal('helpModal'); return; }
+  if(k==='Escape'){ hideToast(); return; }
+  if(k==='ArrowDown' || k==='j' || (k==='Enter' && !t.closest?.('button'))){ e.preventDefault(); moveRow(1); return; }
+  if(k==='ArrowUp' || k==='k'){ e.preventDefault(); moveRow(-1); return; }
+  if(k===']'){ e.preventDefault(); moveSection(1); return; }
+  if(k==='['){ e.preventDefault(); moveSection(-1); return; }
+  if(k==='Tab'){ // inside the findings list, Tab walks rows and skips disabled ones; elsewhere it is native
+    if(t && t.closest && t.closest('.row[data-row]')){ e.preventDefault(); moveRow(e.shiftKey?-1:1); } return; }
+  if(k==='g' || k==='G'){ e.preventDefault(); const zp = document.getElementById('zpanel'); zp.open = true; document.getElementById('z_ratio').focus(); return; }
+  const row = ROWS[cur]; if(!row) return;
+  if(k==='0' || k==='Backspace' || k==='Delete'){ e.preventDefault(); clearRow(row.id); return; }
+  if(/^[1-9]$/.test(k)){
+    const o = row.opts[+k-1]; if(o){ e.preventDefault(); selectOpt(row.id, o[0], true); }
+    return;
+  }
+  if(/^[a-z]$/i.test(k) && !e.shiftKey){
+    const o = row.opts.find(x=>x[2]===k.toLowerCase());
+    if(o){ e.preventDefault(); selectOpt(row.id, o[0], true); }
+  }
+}
+
+
+const RELEASE={version:'2.0.0-final',date:'2026-10-22',label:'Clinical Fidelity — final workflow build; clinical review required'};
+const SOURCES={interpret:'https://publications.ersnet.org/content/erj/60/1/2101499',spiro:'https://pmc.ncbi.nlm.nih.gov/articles/PMC6794117/',dlco:'https://publications.ersnet.org/content/erj/49/1/1600016',restriction:'https://pmc.ncbi.nlm.nih.gov/articles/PMC11473026/'};
+function impairment(z){return z==null||!Number.isFinite(z)||z>=-1.645?null:z>=-2.5?'mild':z>=-4?'moderate':'severe';}
+function clinical(v=S.v,z=S.z){
+ const result={pattern:null,label:'Insufficient observations',evidence:[],limits:[],sentences:[],teaching:[],attention:[]};
+ const flag=(t,tip,lvl)=>result.attention.push([t,tip,lvl||'warn']);
+ const add=t=>result.sentences.push(t),e=t=>result.evidence.push(t),lim=t=>result.limits.push(t);
+ if(v.unusableStudy){result.label='Spirometry unusable: no interpretation';lim('Statement-only report: no pattern, severity or quality statements are generated.');return result;}
+ const complete=v.fvc&&v.fev1&&v.ratio;
+ const low=v.fvc==='dec'||v.fev1==='dec';
+ if(v.q_pre==='bad'){
+  result.label='Spirometry unusable';add('Spirometry is technically unusable; a ventilatory pattern cannot be reliably assigned.');lim('No automated spirometric classification from unusable measurements.');
+ }else if(v.ratio==='dec'){
+  e('FEV1/FVC is below the laboratory LLN; a low FEV1 is not required to identify airflow obstruction.');
+  if(v.tlc==='dec'&&v.q_lv!=='bad'){result.pattern='mixed';result.label='Mixed obstructive and restrictive ventilatory impairment';e('TLC is below LLN, confirming the restrictive component.');add('Spirometry and static lung volumes show a '+(gradeWord('fev1',v,z)?gradeWord('fev1',v,z)+' ':'')+'mixed obstructive and restrictive disorder.');}
+  else {result.pattern='obs';result.label='Obstructive ventilatory impairment';
+   const lvOk=tlcAvail(v),canGrade=v.fvc==='norm'||lvOk,s34=v.fvc==='inc'&&(v.fev1==='norm'||v.fev1==='inc');
+   result.gradeObs=canGrade&&!s34;
+   if(s34){result.possibleObs=true;result.label='Possible obstruction (high FVC)';add(S34_SENT);flag(S34_SENT,'Low FEV1/FVC with a high FVC and a normal or high FEV1: a normal variant or dysanaptic lung growth should be considered. Verify the measurements.','warn');}
+   else if(!canGrade){if(!v.effortStmt){add(S32_SENT);flag(S32_SENT,'Obstruction with a low FVC and no usable TLC: air trapping and coexisting restriction cannot be separated, so severity is left ungraded. Lung volumes would clarify.','warn');}}
+   else{const gw=v.fev1==='norm'?'mild':gradeWord('fev1',v,z),s='The spirometric pattern shows '+(gw?gw+' ':'')+'obstructive impairment.';add(s);if(v.fev1==='norm')flag(s,'Graded mild because FEV1/FVC is below the LLN while FEV1 is normal. Check how close FEV1/FVC is to the LLN and the clinical context.','info');}
+   if(!lvOk){lim('TLC unavailable or unusable: a concomitant restrictive component has not been assessed.');if(v.fvc==='norm'&&!s34)add(FVC_NOTE);}
+   else e('TLC is not below LLN; a mixed defect is not established.');
+  }
+ }else if(v.ratio==='norm'){
+  e('FEV1/FVC is at or above LLN; no spirometric airflow obstruction is identified.');
+  if(v.tlc==='dec'&&v.q_lv!=='bad'){result.pattern='res';result.label='Restrictive ventilatory impairment';e('TLC is below LLN.');{const cx=!!(v.lvRatios&&v.lvRatios.includes('rvtlc')),g=gradeWord('tlc',v,z),rs='Static lung volumes show '+(g?g+' ':'')+(cx?COMPLEX_PHRASE:'restrictive')+' impairment.';add(rs);if(v.fvc==='norm')flag(rs,'Low TLC with a normal FVC is a discordant pattern, usually when the reduction is mild: the maneuvers and reference values differ. Verify TLC (and SVC) and consider a comment.','warn');}
+   if(v.lvRatios&&v.lvRatios.includes('rvtlc')){add(COMPLEX_SENTENCE);result.complex=true;result.label='Complex restrictive ventilatory impairment';lim('Complex wording is driven by the RV/TLC you marked. The app does not calculate the FVC–TLC gap, and RV/TLC also rises simply because TLC is low.');const tipc='Complex wording follows the RV/TLC you marked. Verify FVC is reduced out of proportion to TLC (the original description used FVC % predicted more than 10 points below TLC % predicted); RV/TLC also rises simply because TLC is low. If not, unmark the ratio.';flag(COMPLEX_PHRASE,tipc,'warn');flag(COMPLEX_SENTENCE,tipc,'warn');}
+  }else if(low){
+   if(v.tlc==='norm'&&v.q_lv!=='bad'){result.pattern='nonspecific';result.label='Nonspecific ventilatory pattern (normal TLC)';e('FEV1 and/or FVC reduced, ratio preserved, TLC normal.');for(const t of nonspecificSentences(v,z)){add(t);flag(t,'Nonspecific pattern: may reflect noise or a normal variant if mild, early obstruction with air trapping, or mild restriction. Check effort, SVC versus FVC, and the trend.','info');}}
+   else {result.pattern='preserved';result.label='Reduced spirometric volumes with preserved ratio';if(!(v.tlc==='inc'&&v.q_lv!=='bad'))add(PRISM_SENTENCE);
+    if(v.tlc==='inc'&&v.q_lv!=='bad'){e('TLC increased: restriction is not established.');add('Reduced FEV1 and/or FVC with preserved FEV1/FVC and increased TLC; restriction is not demonstrated.');}
+    else {lim('Restriction is not confirmed without usable TLC. PRISm is a spirometric descriptor, not a diagnosis; definitions vary.');add(FULL_PFT_STATEMENT);}
+   }
+  }else if(complete){
+   result.pattern='normalspiro';result.label='Normal spirometry';add(v.fvlOther&&v.fvlOther.includes('concave')?CONCAVE_SENT:normalSentence(v));if(v.fvlOther&&v.fvlOther.includes('concave'))flag(CONCAVE_SENT,'A concave loop with normal indices is a soft finding: confirm it is reproducible and weigh it with the clinical context.','info');if(!tlcAvail(v))add(FVC_NOTE);
+   if(v.tlc==='norm'&&v.q_lv!=='bad'){
+    result.pattern='normmv';result.label='Normal spirometry and TLC';
+    if(v.dlco==='norm'&&v.q_dl!=='bad'&&!v.dlcoQual?.includes('tech')&&v.fvlShape==='norm'&&(!v.fvlOther?.length)&&v.rv==='norm'&&!v.lvRatios?.length){result.pattern='normal';result.label='Measured spirometry, volumes and DLCO within reference limits';}
+   }
+   e('FEV1, FVC and FEV1/FVC explicitly marked within reference limits.');
+  }
+ }
+ if(!complete)lim('Complete FEV1, FVC and FEV1/FVC observations before finalizing a spirometric interpretation.');
+ if(['res','mixed'].includes(result.pattern)){result.teaching.push('Restriction is confirmed by TLC below LLN. The severity word in the conclusion comes from the modifier you select: TLC for restriction, FEV1 for obstruction or mixed impairment (your laboratory convention). TLC-based severity cutoffs are less well validated than FEV1 cutoffs, and physiologic severity is not disease severity.');}
+ if(v.fev1==='norm'&&v.ratio==='dec')result.teaching.push('A normal FEV1 does not negate a low FEV1/FVC. The ATS phraseology calls this mild obstructive impairment, which does not mean the FEV1 itself is reduced.');
+ if(v.fvc==='dec'&&v.ratio==='dec')result.teaching.push('Low FVC with obstruction may reflect air trapping or incomplete expiration; mixed impairment requires low TLC.');
+ if(v.lvRatios?.includes('rvtlc'))result.teaching.push('Elevated RV/TLC can support air trapping, but can also rise because TLC is reduced. Interpret RV, TLC and technique together.');
+ if(v.lvRatios?.includes('frctlc'))result.teaching.push('Elevated FRC/TLC indicates increased resting lung-volume fraction; interpret alongside TLC and RV/TLC. Hyperinflation terminology is not interchangeable with every elevated volume ratio.');
+ if(v.tlc==='inc'&&!v.lvRatios?.length)result.teaching.push('An increased TLC alone is not sufficient to assume air trapping; large lungs and hyperinflation require contextual interpretation.');
+ if(result.pattern==='obs'&&result.gradeObs)result.teaching.push('Obstruction severity is read from the FEV1 z-score because the FVC and/or TLC is normal (a normal TLC excludes a restrictive reduction of FEV1). With a low FVC and no usable TLC, FEV1 may be reduced by restriction as well, so the severity is left ungraded. A low FEV1/FVC with a normal FEV1 is called mild.');
+ if(v.tlc&&v.tlc!=='np')result.teaching.push('Lung-volume interpretation should be based on the slow vital capacity (SVC). TLC and FVC come from different maneuvers with different reference values, so small discordances are common.');
+ if(result.pattern==='preserved'&&!(v.tlc==='inc'&&v.q_lv!=='bad'))result.teaching.push('PRISm is a spirometry-only descriptor. Without usable lung volumes, restriction cannot be confirmed or excluded, which is why the report recommends full PFTs.');
+ if(result.complex)result.teaching.push('Complex restriction: TLC is low and RV/TLC is increased without obstruction, suggesting FVC is reduced out of proportion to TLC (a lung-emptying problem such as neuromuscular weakness, chest-wall restriction or occult obstruction with gas trapping). Check FVC % predicted against TLC % predicted; RV/TLC can also rise just because TLC is low.');
+ if(result.pattern==='nonspecific'&&v.nearLv&&v.nearLv.includes('tlc_lln'))result.teaching.push('Low FVC and/or FEV1 with a preserved ratio and a TLC sitting just above the LLN can be an early restrictive process, so the report adds that possibility without establishing it. Trend the result and weigh symptoms, exposures and the rest of the study before acting on it.');
+ if(v.dlco==='dec'&&v.dlcoVA==='low'&&v.dlcoKCO==='norm')result.teaching.push('A normal KCO does not mean normal gas transfer when VA is low: KCO limits were derived from people with normal alveolar volumes.');
+ if(['nearMech','nearLv','nearDlco'].some(k=>v[k]&&v[k].length))result.teaching.push('Borderline values sit next to a statistical cutoff (the LLN is the 5th percentile, z −1.645), so about 5% of healthy people fall just beyond it. The paper behind this wording recommends terms such as borderline or zone of uncertainty and reading them in the context of the whole pattern.');
+ if(v.extraStmts&&v.extraStmts.length)result.teaching.push('Air trapping and hyperinflation are defined differently between laboratories. Here, air trapping follows an increased RV, or an increased RV/TLC when TLC is not reduced; hyperinflation follows an increased TLC. Check these against your laboratory convention.');
+ if(v.bmiHigh==='hi'&&['res','mixed'].includes(result.pattern))result.teaching.push('Obesity mainly lowers FRC and ERV; TLC is usually not reduced until BMI exceeds about 40 kg/m² (ERS/ATS). Obesity is therefore a more likely contributor to a restrictive pattern above that level; at lower BMI, look for other contributors.');
+ result.teaching.push('LLN/ULN identify reference limits, not disease diagnoses. Interpret borderline findings, symptoms, exposures, quality and serial data together.');
+ if(v.dlco==='dec')result.teaching.push('Low DLCO is a physiological finding, not a diagnosis of emphysema, ILD or pulmonary vascular disease. Review Hb, quality, VA and KCO in clinical context; KCO is not a simple correction for low VA.');
+ result.teaching.push('Bronchodilator response: 100 × (post − pre) / predicted; >10% in either FEV1 or FVC. Exactly 10% is not positive (calculator uses a 1e−10 percentage-point floating-point tolerance). BDR does not distinguish asthma from COPD or establish clinical treatment benefit.');
+ return result;
+}
+function qualityLines(){
+ const v=S.v,lines=[],missing=[],r=ivcRatio();
+ const act={pre:!!(v.fvc||v.fev1||v.ratio),post:['sig','nsig','indet'].includes(v.bd),lv:!!v.tlc&&v.tlc!=='np',dl:!!v.dlco&&v.dlco!=='np'};
+ const T=[['pre','Spirometry','q_pre'],['post','Post-bronchodilator spirometry','q_post'],['lv','Lung volumes','q_lv'],['dl','DLCO maneuvers','q_dl']].filter(t=>act[t[0]]);
+ const ok=T.filter(t=>v[t[2]]==='ok'),limited=T.filter(t=>v[t[2]]==='limited'),bad=T.filter(t=>v[t[2]]==='bad');
+ T.forEach(t=>{if(!v[t[2]])missing.push(t[1]);});
+ const dlOk=ok.some(t=>t[0]==='dl'),viOk=act.dl&&(v.q_vi==='ok'||(v.q_vi==null&&r!=null&&r>=0.9));
+ const allGood=T.length>0&&ok.length===T.length,gradeLine={ab:QUALITY_GOOD,ce:QUALITY_LIMITED,u:QUALITY_USABLE}[v.qGrade];
+ if(gradeLine)lines.push(gradeLine);
+ if(allGood){if(!gradeLine)lines.push(QUALITY_GOOD);}
+ else{
+  if(limited.length&&!gradeLine)lines.push(QUALITY_LIMITED);
+  if(ok.length){
+   const names=[];
+   if(ok.some(t=>t[0]==='pre')&&ok.some(t=>t[0]==='post'))names.push('pre- and post-bronchodilator spirometry');else{if(ok.some(t=>t[0]==='pre'))names.push('spirometry');if(ok.some(t=>t[0]==='post'))names.push('post-bronchodilator spirometry');}
+   if(ok.some(t=>t[0]==='lv'))names.push('lung volumes');if(dlOk)names.push('DLCO');
+   let list=names.length>1?names.slice(0,-1).join(', ')+' and '+names[names.length-1]:names[0];list=list[0].toUpperCase()+list.slice(1);
+   lines.push(list+' acceptable and repeatable.');
+  }
+  limited.forEach(t=>lines.push(t[1]+' technically limited.'));
+  bad.forEach(t=>lines.push(t[1]+' unusable; reliable interpretation is not possible.'));
+ }
+ if(act.dl){
+  if(dlOk&&viOk)lines.push('DLCO inspired volume ≥90% of largest VC.');
+  else if(v.q_vi==='alt')lines.push('DLCO inspired volume ≥85% of largest same-session VC; alternative VA criterion verified.');
+  else if(v.q_vi==='bad')lines.push('DLCO inspired-volume criterion not met.');
+  else if(r!=null)lines.push('DLCO inspired volume '+(100*r).toFixed(1)+'% of largest entered VC'+(r>=0.9?'':'; acceptability requires review')+'.');
+  else if(v.q_vi==null&&!viOk)missing.push('DLCO inspired volume');
+  if(!v.q_hb)missing.push('DLCO Hb adjustment');
+ }
+ if(v.q_limits.length)lines.push('Limitations: '+v.q_limits.map(x=>({effort:'suboptimal effort',cough:'cough',leak:'leak',end:'early termination',timing:'DLCO timing',repeat:'repeatability'})[x]).join(', ')+'.');
+ if(missing.length)lines.push('Quality not assessed: '+missing.join(', ')+'.');
+ return lines.length?lines:['Not assessed.'];
+}
+
+let approvedFingerprint=null,editBaseline=null,practiceActive=false;
+function fingerprint(includeEdit=true){return JSON.stringify({v:S.v,z:S.z,priorDate:S.priorDate,priorText:S.priorText,comments:S.comments,settings,basis:document.getElementById('spiroBasis')?.value,reference:document.getElementById('referenceName')?.value,edited:includeEdit&&editing?document.getElementById('report').value:null});}
+const MODULES=[['normal','Measured tests normal'],['normalspiro','Normal spirometry'],['normmv','Normal spirometry + TLC'],['obs','Obstruction'],['res','Confirmed restriction'],['mixed','Mixed impairment'],['nonspecific','Nonspecific pattern'],['preserved','Preserved ratio / reduced volumes']];
+function renderLearning(){
+ const root=document.getElementById('reasoning');if(!root)return;
+ const c=clinical(),list=(title,items)=>items.length?'<h3>'+title+'</h3><ul>'+items.map(t=>'<li>'+escapeHtml(t)+'</li>').join('')+'</ul>':'';
+ root.innerHTML='<h3>Suggested physiology: '+escapeHtml(c.label)+'</h3>'+list('Supporting observations',c.evidence)+list('Limits / missing evidence',c.limits)+list('Teaching points (not copied)',c.teaching)+'<p>Source: <a href="'+SOURCES.interpret+'" target="_blank" rel="noopener">ERS/ATS interpretive strategies (2021 / published 2022)</a></p>'+PHRASEOLOGY_NOTE;
+ const modules=document.getElementById('moduleButtons');modules.replaceChildren();MODULES.forEach(([key,label])=>{const button=document.createElement('button');button.className='btn';button.textContent=label;button.disabled=c.pattern!==key||checks().some(x=>x[0]==='err');button.title=button.disabled?'Not supported by current entered evidence.':'Verify the supported conclusion; does not populate observations.';button.onclick=()=>{S.autoF.primary=true;S.v.primary=c.pattern;render();document.getElementById('reviewState').textContent='Supported conclusion confirmed from the entered observations.';};modules.appendChild(button);});
+ const current=fingerprint();if(approvedFingerprint&&approvedFingerprint!==current){approvedFingerprint=null;document.getElementById('reviewAck').checked=false;}
+ document.getElementById('reviewState').textContent=practiceActive?'PRACTICE ACTIVE: app copying disabled.':approvedFingerprint===current?'Reviewed for this exact input and report state.':'Draft — review and accept before using app copy controls.';
+ if(editing&&editBaseline!==fingerprint(false))document.getElementById('editMsg').textContent='Structured observations changed after hand-editing. Discard edits and regenerate before copying.';
+}
+function canCopy(){
+ const status=document.getElementById('copyStatus');let message='';
+ if(practiceActive)message='Leave practice mode before copying a clinical report.';
+ else if(checks().some(x=>x[0]==='err'))message='Resolve blocking consistency errors before copying.';
+ else if(editing&&editBaseline!==fingerprint(false))message='Structured findings changed after editing. Regenerate the report before copying.';
+
+ if(message){status.textContent=message;status.className='status';return false;}return true;
+}
+
+async function copyAndClear(){
+ if(!canCopy())return;const button=document.getElementById('btnCopyClear');if(button.disabled)return;button.disabled=true;
+ const before=fingerprint();const text=editing?document.getElementById('report').value:generatedText();
+ try{if(await copyText(text,'Report')){
+  if(before!==fingerprint()){document.getElementById('copyStatus').textContent='Earlier report copied; form changed during copying and was not cleared.';return;}
+  newPatient();document.getElementById('copyStatus').textContent='Report copied. Cleared for next patient.';toast('Report copied; form cleared. Undo is available.',true);
+ }}finally{button.disabled=false;}
+}
+const PRESET_KEY='pft_clinical_fidelity_v2_observation_presets';
+const PRESET_FIELDS=['fvc','fev1','ratio','fvlShape','fvlFlow','fvlOther','tlc','rv','lvRatios','dlco'];let templates=[],recent=[];
+function validTemplate(p){return p&&typeof p.name==='string'&&p.name.trim().length>0&&p.name.length<=80&&p.values&&typeof p.values==='object'&&Object.entries(p.values).every(([id,v])=>PRESET_FIELDS.includes(id)&&(ROW[id].multi?Array.isArray(v)&&v.every(x=>ROW[id].opts.some(o=>o[0]===x)):v===null||ROW[id].opts.some(o=>o[0]===v)));}
+try{const p=JSON.parse(localStorage.getItem(PRESET_KEY)||'[]');if(Array.isArray(p)&&p.length<=100)templates=p.filter(validTemplate);}catch(e){}
+function storeTemplates(){try{localStorage.setItem(PRESET_KEY,JSON.stringify(templates));document.getElementById('presetStatus').textContent='Generic observation templates saved in this browser; patient report data are not stored.';}catch(e){document.getElementById('presetStatus').textContent='Storage blocked. Templates are session-only; use Export.';}}
+function renderTemplates(){const sel=document.getElementById('presetSelect');sel.replaceChildren();templates.forEach((p,i)=>{const option=document.createElement('option');option.value=i;option.textContent=p.name;sel.appendChild(option);});const r=document.getElementById('recentPresets');r.replaceChildren();if(recent.length)r.append('Recent: ');recent.forEach(name=>{const b=document.createElement('button');b.className='btn';b.textContent=name;b.onclick=()=>loadTemplate(name);r.appendChild(b);});}
+function loadTemplate(name){const p=templates.find(x=>x.name===name);if(!p)return;if(!confirm('Replace this form with generic observations from '+name+'? Patient-specific fields and quality will be cleared.'))return;newPatient();for(const[id,v]of Object.entries(p.values))S.v[id]=clone(v);recent=[name,...recent.filter(x=>x!==name)].slice(0,4);renderTemplates();render();toast('Template loaded. Independently verify every finding; no clinical inference is preaccepted.',true);}
+const PRACTICE=[
+ {name:'Low ratio, normal FEV1',prompt:'Fictional adult: quality acceptable. FEV1/FVC z −2.0; FEV1 z −1.0; FVC normal; TLC normal. What pattern is supported?',v:{ratio:'dec',fev1:'norm',fvc:'norm',tlc:'norm'},z:{ratio:-2,fev1:-1},answer:'obs',why:'Obstruction is identified by a ratio below LLN, even with normal FEV1. The ATS phraseology calls this mild obstructive impairment, which does not mean the FEV1 itself is reduced.'},
+ {name:'Low FVC, TLC unavailable',prompt:'Fictional adult: quality acceptable. FEV1/FVC normal; FEV1 and FVC low; TLC not measured. Is restriction confirmed?',v:{ratio:'norm',fev1:'dec',fvc:'dec',tlc:'np'},z:{},answer:'preserved',why:'Restriction is unconfirmed without TLC. PRISm is a spirometric descriptor whose research definitions vary; it is not a disease diagnosis.'},
+ {name:'Low FVC, normal TLC',prompt:'Fictional adult: quality acceptable. FEV1/FVC normal; FEV1 and FVC low; TLC normal.',v:{ratio:'norm',fev1:'dec',fvc:'dec',tlc:'norm'},z:{},answer:'nonspecific',why:'Preserved ratio, reduced spirometric volumes and normal TLC support a nonspecific pattern. Check effort and consider physiology/context, not an automatic disease label.'},
+ {name:'Obstruction plus low FVC',prompt:'Fictional adult: quality acceptable. FEV1/FVC low; FEV1 and FVC low; TLC normal; RV/TLC increased.',v:{ratio:'dec',fev1:'dec',fvc:'dec',tlc:'norm',lvRatios:['rvtlc']},z:{},answer:'obs',why:'This is obstruction, not confirmed mixed impairment. Low FVC does not establish restriction when TLC is normal.'},
+ {name:'Confirmed mixed pattern',prompt:'Fictional adult: quality acceptable. FEV1/FVC below LLN and TLC below LLN.',v:{ratio:'dec',fev1:'dec',fvc:'dec',tlc:'dec'},z:{},answer:'mixed',why:'Both an obstructive ratio and low TLC are present. Do not fill in BDR, emphysema, RV or disease severity from this label.'},
+ {name:'Confirmed restriction',prompt:'Fictional adult: quality acceptable. FEV1/FVC normal; FVC low; TLC below LLN.',v:{ratio:'norm',fev1:'dec',fvc:'dec',tlc:'dec'},z:{},answer:'res',why:'Low TLC establishes restriction. Restriction is a physiological classification, not a diagnosis of ILD; severity requires an explicit convention.'},
+ {name:'Normal spirometry, no other tests',prompt:'Fictional adult: acceptable spirometry, FEV1/FVC, FEV1 and FVC all normal. Lung volumes and DLCO not performed.',v:{ratio:'norm',fev1:'norm',fvc:'norm',tlc:'np',dlco:'np'},z:{},answer:'normalspiro',why:'Report normal spirometry, not globally normal pulmonary function. Unmeasured components have not been evaluated.'},
+ {name:'Normal spirometry, low DLCO',prompt:'Fictional adult: spirometry normal; TLC not measured; DLCO low. Does low DLCO diagnose pulmonary vascular disease?',v:{ratio:'norm',fev1:'norm',fvc:'norm',tlc:'np',dlco:'dec'},z:{},answer:'normalspiro',why:'Spirometry remains normal; DLCO is separately reduced. Consider quality, Hb and a clinically appropriate differential. No disease is diagnosed by this combination alone.'}
+];
+function startPractice(){const index=document.getElementById('practiceCase').value;if(index===''){practiceActive=false;document.getElementById('casePrompt').textContent='';renderLearning();return;}practiceActive=true;document.getElementById('practicePanel').open=true;document.getElementById('casePrompt').textContent=PRACTICE[Number(index)].prompt;document.getElementById('caseAnswer').textContent='';document.getElementById('practiceGuess').value='';approvedFingerprint=null;renderLearning();}
+function bindFidelity(){
+ document.getElementById('btnCopyClear').onclick=copyAndClear;
+ const select=document.getElementById('practiceCase');select.appendChild(new Option('Choose a fictional case…',''));PRACTICE.forEach((p,i)=>select.appendChild(new Option(p.name,i)));select.onchange=startPractice;
+ document.getElementById('revealCase').onclick=()=>{if(select.value==='')return;const p=PRACTICE[Number(select.value)];const v=Object.assign(blankState().v,{q_pre:'ok',q_lv:'ok',q_dl:'ok'},p.v);const actual=clinical(v,p.z);const guess=document.getElementById('practiceGuess').value;document.getElementById('caseAnswer').textContent=(guess===p.answer?'Correct. ':guess?'Reconsider your answer. ':'')+actual.label+'\n'+p.why;};
+ document.getElementById('leavePractice').onclick=()=>{practiceActive=false;select.value='';document.getElementById('practicePanel').open=false;document.getElementById('caseAnswer').textContent='';document.getElementById('casePrompt').textContent='';renderLearning();};
+ document.getElementById('approveReport').onclick=()=>{
+  if(practiceActive){toast('Leave practice mode first.');return;}
+  if(checks().some(x=>x[0]==='err')){toast('Resolve blocking consistency errors first.');return;}
+  if(editing&&editBaseline!==fingerprint(false)){toast('Regenerate hand-edited text after structured findings change.');return;}
+  if(!document.getElementById('reviewAck').checked){toast('Review and acknowledge the source measurements, cautions and final report.');return;}
+  approvedFingerprint=fingerprint();renderLearning();
+ };
+ for(const id of ['spiroBasis','referenceName','includeHeaders'])document.getElementById(id).addEventListener('input',()=>{approvedFingerprint=null;document.getElementById('reviewAck').checked=false;render();});
+ document.getElementById('reviewAck').onchange=()=>{if(!document.getElementById('reviewAck').checked){approvedFingerprint=null;renderLearning();}};
+ document.getElementById('savePreset').onclick=()=>{const name=document.getElementById('presetName').value.trim();if(!name||name.length>80){toast('Use a generic name of 1–80 characters.');return;}if(templates.length>=100||templates.some(p=>p.name===name)){toast('Duplicate name or preset limit reached.');return;}const values={};PRESET_FIELDS.forEach(id=>values[id]=clone(S.v[id]));templates.push({name,values});storeTemplates();renderTemplates();};
+ document.getElementById('loadPreset').onclick=()=>{const p=templates[Number(document.getElementById('presetSelect').value)];if(p)loadTemplate(p.name);};
+ document.getElementById('deletePreset').onclick=()=>{const index=Number(document.getElementById('presetSelect').value);const p=templates[index];if(p&&confirm('Delete generic template '+p.name+'?')){templates.splice(index,1);recent=recent.filter(x=>x!==p.name);storeTemplates();renderTemplates();}};
+ document.getElementById('exportPreset').onclick=()=>{const blob=new Blob([JSON.stringify({schema:PRESET_KEY,release:RELEASE,presets:templates},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='PFT-Clinical-Fidelity-v2-presets.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+ document.getElementById('importPreset').onclick=()=>document.getElementById('presetFile').click();
+ document.getElementById('presetFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>1000000)throw Error();const data=JSON.parse(await file.text());if(data.schema!==PRESET_KEY||!Array.isArray(data.presets)||data.presets.length>100||!data.presets.every(validTemplate))throw Error();const additions=data.presets.filter(p=>!templates.some(x=>x.name===p.name));if(additions.length+templates.length>100)throw Error();templates.push(...additions);storeTemplates();renderTemplates();toast('Imported '+additions.length+' templates; existing names skipped.');}catch(error){toast('Import rejected: use this release family’s validated preset export.');}finally{e.target.value='';}};
+ let matches=[],index=-1;const find=()=>{const query=document.getElementById('findingSearch').value.trim().toLowerCase();matches=query?ROWS.map((r,i)=>({r,i})).filter(({r})=>(r.label+' '+(r.sub||'')+' '+r.opts.map(o=>o[1]).join(' ')).toLowerCase().includes(query)):[];if(!matches.length){document.getElementById('findStatus').textContent='No match.';return;}index=(index+1)%matches.length;setCur(matches[index].i);document.getElementById('findStatus').textContent=(index+1)+' / '+matches.length;};
+ document.getElementById('findNext').onclick=find;document.getElementById('findingSearch').oninput=()=>index=-1;document.getElementById('findingSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();e.stopPropagation();find();}});
+ renderTemplates();
+}
+
+
+const GRADE_KEYS={fvc:'fvcGrade',fev1:'fev1Grade',ratio:'ratioGrade',tlc:'tlcGrade',dlco:'dlcoSev'};
+const Z_CODE={mild:'mild',moderate:'mod',severe:'sev'};
+const Z_RANGE={mild:'z −1.65 to −2.5',mod:'z −2.5 to −4',sev:'z < −4'};
+const NEAR={nearMech:{fvc_lln:['FVC','L'],fev1_lln:['FEV1','L'],ratio_lln:['FEV1/FVC','L']},nearLv:{tlc_lln:['TLC','L'],tlc_uln:['TLC','U'],rv_lln:['RV','L'],rv_uln:['RV','U'],rvtlc_uln:['RV/TLC','U'],frctlc_uln:['FRC/TLC','U']},nearDlco:{dlco_lln:['DLCO','L']}};
+function tlcAvail(v){return !!v.tlc&&v.tlc!=='np'&&v.q_lv!=='bad';}
+function airTrapSupported(v){return v.rv==='inc'||(v.lvRatios.includes('rvtlc')&&v.tlc!=='dec');}
+function hyperSupported(v){return v.tlc==='inc';}
+function autoExtraStmts(v){const a=[];if(airTrapSupported(v))a.push('airtrap');if(hyperSupported(v))a.push('hyper');return a;}
+function andJoin(a){return a.length>1?a.slice(0,-1).join(', ')+' and '+a[a.length-1]:a[0];}
+function normalSentence(v){
+ const parts=['spirometry'];
+ const lvAll=v.tlc==='norm'&&v.q_lv!=='bad'&&(v.rv==null||v.rv==='norm')&&!(v.lvRatios&&v.lvRatios.length);
+ if(lvAll)parts.push('static lung volumes');else if(v.tlc==='norm'&&v.q_lv!=='bad')parts.push('total lung capacity');
+ if(v.dlco==='norm'&&v.q_dl!=='bad'&&!(v.dlcoQual&&v.dlcoQual.includes('tech')))parts.push('diffusing capacity');
+ return 'Normal '+andJoin(parts)+'.';
+}
+function nonspecificSentences(v,z){
+ const onlyFev=v.fev1==='dec'&&v.fvc!=='dec',onlyFvc=v.fvc==='dec'&&v.fev1!=='dec',early=!(v.nearLv&&v.nearLv.includes('tlc_lln'));
+ if(onlyFev&&gradeCode('fev1',v,z)==='mild')return ['The spirometric pattern shows an isolated mild reduction in FEV1.'].concat(early?[EARLY_VENT]:[]);
+ if(onlyFvc&&gradeCode('fvc',v,z)==='mild')return ['The spirometric pattern shows an isolated mild reduction in FVC.'].concat(early?[EARLY_VENT]:[]);
+ return ['The spirometric pattern shows nonspecific ventilatory impairment.'];
+}
+function flatteningText(v){
+ const i=v.fvlOther.includes('insp'),e=v.fvlOther.includes('exp');
+ if(i&&e)return ['Reproducible flattening of both limbs of the flow-volume loop suggests fixed upper or central airway obstruction.'];
+ if(i)return ['Reproducible flattening of the inspiratory limb of the flow-volume loop suggests extrathoracic upper or central airway obstruction.'];
+ if(e)return ['Reproducible flattening of the expiratory limb of the flow-volume loop suggests intrathoracic upper or central airway obstruction.'];
+ return [];
+}
+function mechanismSentences(v){
+ const out=[];
+ if(v.dlco!=='dec')return out;
+ if(v.dlcoVA==='low'&&v.dlcoKCO==='high')out.push('Reduced diffusing capacity with low alveolar volume and high KCO suggests that incomplete lung expansion (for example weakness, poor effort, chest wall restriction, or lung resection) is primarily impairing gas transfer.');
+ else if(v.dlcoVA==='low'&&(v.dlcoKCO==='norm'||v.dlcoKCO==='low'))out.push('Reduced diffusing capacity with low alveolar volume and low or normal KCO suggests loss of alveolar-capillary gas transfer from parenchymal or vascular abnormalities.');
+ if(v.dlcoVATLC==='low')out.push('The low VA/TLC reflects uneven distribution of ventilation, and impaired gas mixing is likely contributing to the reduced measured diffusing capacity.');
+ return out;
+}
+function mechanismDetail(v){return mechanismSentences(v).length>0;}
+function hgbSentence(v){
+ if(!v.dlcoHgb)return (v.dlco==='dec'&&v.q_hb==='no')?NOT_ADJ_SENT:null;
+ if(v.dlco==='dec'){const lead='A low hemoglobin can also reduce the diffusing capacity independent of lung function; ';
+  return {na:'Hemoglobin was unavailable for adjustment. Anemia, if present, may contribute to the reduced DLCO.',full:lead+'here the reduction is entirely explained by the low hemoglobin value.',part:lead+'here the reduction is only partly explained by the hemoglobin value.'}[v.dlcoHgb];}
+ if(v.dlco==='inc')return {na:'Elevated diffusing capacity suggests pulmonary vascular engorgement or polycythemia; hemoglobin was unavailable for adjustment.',full:'The elevated diffusing capacity is explained by the high hemoglobin value.',part:'The elevated diffusing capacity is not explained by the hemoglobin value.'}[v.dlcoHgb];
+ return null;
+}
+function dlcoDetailSentences(v){const out=[...mechanismSentences(v)],h=hgbSentence(v);if(h)out.push(h);return out;}
+function needsFev1Grade(v,c){return ((c.pattern==='obs'&&c.gradeObs!==false&&!c.possibleObs)||c.pattern==='mixed')&&v.fev1==='dec';}
+function needsTlcGrade(v,c){return c.pattern==='res'&&v.tlc==='dec';}
+function earlyRestrictApplies(v,c){return !!(c&&c.pattern==='nonspecific'&&v.nearLv&&v.nearLv.includes('tlc_lln'));}
+function nearLimitText(v,c){
+ const early=earlyRestrictApplies(v,c),dom={nearMech:[],nearLv:[],nearDlco:[]},U=[];
+ for(const [row,map] of Object.entries(NEAR)){if(!v[row])continue;for(const [key,[name,side]] of Object.entries(map)){if(!v[row].includes(key))continue;if(early&&key==='tlc_lln')continue;if(side==='L')dom[row].push(row==='nearDlco'?'Diffusing capacity':name);else U.push(name);}}
+ const out=[];
+ for(const row of ['nearMech','nearLv','nearDlco']){const n=dom[row];if(n.length)out.push(andJoin(n)+(n.length>1?' are':' is')+' borderline low, and '+(n.length>1?'their':'its')+' significance is uncertain.');}
+ if(U.length)out.push(andJoin(U)+(U.length>1?' are':' is')+' near the upper limit of normal.');
+ if(early){out.push('TLC is borderline low.');out.push(EARLY_RESTRICT);}
+ return out;
+}
+function attentionItems(v,c){
+ const items=[...(c.attention||[])];
+ if(v.unusableStudy)return [];
+ const add=(t,tip,l)=>items.push([t,tip,l]);
+ for(const t of nearLimitText(v,c)){if(/borderline low/.test(t)||t===EARLY_RESTRICT)add(t,'Borderline value in the zone of uncertainty: read it within the whole pattern and the trend. The result can change with the reference equations used.','info');}
+ for(const t of flatteningText(v))add(t,'The sentence says the flattening is reproducible. Confirm it repeats across efforts on the curves before copying.','info');
+ if(v.effortStmt==='yes')add(EFFORT_SENT,'Effort or weakness is blamed for the low values: the quality grading should reflect this, and a reduced PEF supports it.','warn');
+ for(const t of mechanismSentences(v))add(t,'This mechanism sentence depends on the VA, KCO and VA/TLC you entered. Verify them; a normal KCO with a low VA does not mean normal gas transfer.','info');
+ const h=hgbSentence(v);if(h&&v.dlcoHgb==='na')add(h,'Hemoglobin was not available, so a low or high hemoglobin cannot be excluded as a contributor to the DLCO.','info');if(h&&!v.dlcoHgb&&v.q_dl!=='bad'&&!(v.dlcoQual&&v.dlcoQual.includes('tech')))add(h,'DLCO was not adjusted for hemoglobin, so anemia cannot be excluded as a contributor to a reduced DLCO.','info');
+ return items;
+}
+function nearConflicts(v){
+ const out=[],has=(row,key)=>v[row]&&v[row].includes(key);
+ const err=t=>out.push(['err',t]),warn=t=>out.push(['warn',t]);
+ if(has('nearLv','tlc_lln')&&has('nearLv','tlc_uln'))err('TLC cannot be near both the LLN and the ULN.');
+ if(has('nearLv','rv_lln')&&has('nearLv','rv_uln'))err('RV cannot be near both the LLN and the ULN.');
+ const lowSet=[['nearMech','fvc_lln','fvc','FVC'],['nearMech','fev1_lln','fev1','FEV1'],['nearMech','ratio_lln','ratio','FEV1/FVC'],['nearLv','tlc_lln','tlc','TLC'],['nearDlco','dlco_lln','dlco','DLCO']];
+ for(const [row,key,id,name] of lowSet){if(!has(row,key))continue;
+  if(v[id]==='inc')err(name+' is marked increased but also near the LLN.');
+  const g=gradeCode(id);if(g==='mod'||g==='sev')warn(name+' is graded '+SEV_WORD[g]+'ly decreased; "near LLN" usually applies to normal or only mildly low values.');}
+ if(has('nearLv','tlc_uln')&&v.tlc==='dec')err('TLC is marked decreased but also near the ULN.');
+ if(has('nearLv','rv_lln')&&v.rv==='inc')err('RV is marked increased but also near the LLN.');
+ if(has('nearLv','rv_uln')&&v.rv==='dec')err('RV is marked decreased but also near the ULN.');
+ if(has('nearLv','tlc_uln')&&v.tlc==='inc')err('TLC is marked increased but also near the ULN.');
+ if(has('nearLv','rv_uln')&&v.rv==='inc')err('RV is marked increased but also near the ULN.');
+ if(has('nearLv','rvtlc_uln')&&v.lvRatios.includes('rvtlc'))err('RV/TLC is marked increased but also near the ULN.');
+ if(has('nearLv','frctlc_uln')&&v.lvRatios.includes('frctlc'))err('FRC/TLC is marked increased but also near the ULN.');
+ return out;
+}
+function gradeCode(id,v=S.v,z=S.z){
+ if(v[id]!=='dec')return null;
+ if(Number.isFinite(z[id])){const g=impairment(z[id]);return g?Z_CODE[g]:null;}
+ return v[GRADE_KEYS[id]]||null;
+}
+function gradeWord(id,v=S.v,z=S.z){const c=gradeCode(id,v,z);return c?SEV_WORD[c]:null;}
+function meas(id){
+ const v=S.v,z=S.z,w=gradeWord(id),adv=w?w+'ly ':'';
+ const zt=(['fev1','dlco'].includes(id)&&v[id]==='dec'&&Number.isFinite(z[id]))?' (z-score '+z[id].toFixed(2)+')':'';
+ if(id==='dlco')return 'Diffusing capacity is '+(v.dlco==='dec'?adv+'reduced':v.dlco==='inc'?'increased':'normal')+zt+'.';
+ const base={fvc:'Forced vital capacity (FVC) is ',fev1:'Forced expiratory volume in one second (FEV1) is ',ratio:'FEV1/FVC is ',tlc:'Total lung capacity (TLC) is '}[id];
+ if(v[id]==='dec')return base+adv+'decreased'+zt+'.';
+ return P[id][v[id]];
+}
+function scrollToTop(){
+ window.scrollTo(0,0);
+ for(const sel of ['html','body','.layout','#inputs','.output','main']){const el=document.querySelector(sel);if(el)el.scrollTop=0;}
+}
+function testsMode(v){
+ const tnp=v.tlc==='np',dnp=v.dlco==='np';
+ if(tnp&&dnp)return 'spiro';
+ if(dnp&&!tnp)return v.tlc?'spiro_lv':(v.tpPick==='spiro_lv'?'spiro_lv':null);
+ if(tnp&&!dnp)return v.dlco?'spiro_dlco':(v.tpPick==='spiro_dlco'?'spiro_dlco':null);
+ if(v.tlc&&v.dlco)return 'full';
+ return v.tpPick==='full'?'full':null;
+}
+function setTests(mode){
+ undoSnap=clone(S);const v=S.v;v.unusableStudy=false;v.tpPick=mode;
+ if(mode==='spiro'){v.tlc='np';v.dlco='np';}
+ else if(mode==='spiro_lv'){v.dlco='np';if(v.tlc==='np')v.tlc=null;}
+ else if(mode==='spiro_dlco'){v.tlc='np';if(v.dlco==='np')v.dlco=null;}
+ else{if(v.tlc==='np')v.tlc=null;if(v.dlco==='np')v.dlco=null;}
+ delete S.fromZ.tlc;delete S.fromZ.dlco;render();
+ toast({spiro:'Spirometry only: lung volumes and DLCO marked not performed.',spiro_lv:'Spirometry + lung volumes: DLCO marked not performed.',spiro_dlco:'Spirometry + DLCO: lung volumes marked not performed.',full:'Full PFT: choose lung-volume and DLCO findings.'}[mode],true);
+}
+const REQUIRED_ROWS=['q_pre','q_post','q_lv','q_dl','q_vi','q_hb','fvc','fev1','ratio','bd','fvlShape','tlc','rv','dlco','prior'];
+function requiredIds(){
+ const v=S.v,c=clinical(),ids=new Set(),r=ivcRatio();
+ if(v.unusableStudy)return [];
+ for(const id of REQUIRED_ROWS){
+  if(isDisabled(id))continue;
+  if(id==='q_post'&&!['sig','nsig','indet'].includes(v.bd))continue;
+  if(id==='q_lv'&&!(v.tlc&&v.tlc!=='np'))continue;
+  if(['q_dl','q_vi','q_hb'].includes(id)&&!(v.dlco&&v.dlco!=='np'))continue;
+  if(id==='rv'&&!(v.tlc&&v.tlc!=='np'))continue;
+  const missing=id==='q_vi'?(!v.q_vi&&r==null):!v[id];
+  if(missing)ids.add(id);
+ }
+ if(needsFev1Grade(v,c)&&!gradeCode('fev1'))ids.add('fev1');
+ if(needsTlcGrade(v,c)&&!gradeCode('tlc'))ids.add('tlc');
+ return [...ids].map(id=>ROWS.findIndex(x=>x.id===id)).filter(i=>i>=0).sort((a,b)=>a-b).map(i=>ROWS[i].id);
+}
+function nextRequired(){
+ const ids=requiredIds();
+ if(!ids.length){toast('All required items are set. Review the Checks, then copy.');const b=document.getElementById('btnCopy');if(b)b.focus();return;}
+ const idxs=ids.map(id=>ROWS.findIndex(r=>r.id===id));
+ const rowEl=document.querySelector('[data-idx="'+cur+'"]'),focusedHere=!!(rowEl&&rowEl.contains(document.activeElement));
+ const next=idxs.find(i=>focusedHere?i>cur:i>=cur);
+ setCur(next!==undefined?next:idxs[0]);
+}
+function normalSpiroValues(){
+ undoSnap=clone(S);const v=S.v;v.unusableStudy=false;
+ v.fvc='norm';v.fev1='norm';v.ratio='norm';
+ for(const k of ['fvc','fev1','ratio'])delete S.fromZ[k];
+ render();setCur(ROWS.findIndex(r=>r.id==='bd'));
+ toast('Normal spirometry values set. Choose the bronchodilator result.',true);
+}
+function quickQuality(hb){
+ undoSnap=clone(S);const v=S.v;if(v.dlco==='np')hb='yes';v.unusableStudy=false;v.quickHb=hb;v.qGrade=null;
+ v.q_pre='ok';if(v.bd!=='np')v.q_post='ok';if(v.tlc!=='np')v.q_lv='ok';
+ let note='All performed tests marked acceptable and repeatable; limitations cleared.';
+ if(v.dlco!=='np'){v.q_dl='ok';v.q_hb=hb;v.dlcoQual=[];const r=ivcRatio();if(r!=null&&r<0.9){v.q_vi=null;note='Marked adequate, but entered DLCO inspired volume is below 90%: choose DLCO inspired volume manually.';}else v.q_vi='ok';}
+ v.q_limits=[];render();toast(note,true);
+}
+function quickMatches(hb){
+ const v=S.v;if(v.unusableStudy)return false;
+ if(v.qGrade&&v.qGrade!=='ab')return false;
+ if(v.q_pre!=='ok'||v.q_limits.length)return false;
+ if(v.bd!=='np'&&v.q_post!=='ok')return false;
+ if(v.tlc!=='np'&&v.q_lv!=='ok')return false;
+ if(v.dlco!=='np'){const r=ivcRatio();if(v.q_dl!=='ok'||!(v.q_vi==='ok'||(v.q_vi==null&&r!=null&&r>=0.9))||v.q_hb!==hb)return false;}
+ else return hb==='yes'&&v.quickHb==='yes';
+ return true;
+}
+function toggleUnusable(){
+ undoSnap=clone(S);S.v.unusableStudy=!S.v.unusableStudy;render();
+ toast(S.v.unusableStudy?'Statement-only report: unable to produce acceptable spirometry.':'Statement-only report removed; your entered findings are restored.',true);
+}
+let imageURL=null;
+function clearPreview(){if(imageURL)URL.revokeObjectURL(imageURL);imageURL=null;const img=document.getElementById('pftPreview');if(img){img.removeAttribute('src');img.hidden=true;img.style.width='100%';document.getElementById('pftImageFile').value='';document.getElementById('imageZoom').value='100';document.getElementById('imageStatus').textContent='';}}
+function installWorkflow(){
+ const q=document.querySelector('[data-sec="quality"]');
+ const bar=document.createElement('div');bar.style.cssText='padding:10px;border-bottom:1px solid var(--border)';
+ bar.innerHTML='<div id="tpRow" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px"><b style="font-size:12px;margin-right:4px">Tests performed</b><button class="btn" id="tpSpiro" type="button" aria-pressed="false">Spirometry only <kbd>⇧O</kbd></button><button class="btn" id="tpLV" type="button" aria-pressed="false">Spirometry + lung volumes</button><button class="btn" id="tpDLCO" type="button" aria-pressed="false">Spirometry + DLCO</button><button class="btn" id="tpFull" type="button" aria-pressed="false">Full PFT</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn" id="qAdequateHb" type="button" aria-pressed="false">All adequate · Hb adjusted <kbd>⇧Q</kbd></button><button class="btn" id="qAdequateNoHb" type="button" aria-pressed="false">All adequate · Hb not adjusted <kbd>⇧W</kbd></button><button class="btn" id="qUnusable" type="button" aria-pressed="false" style="border-color:var(--err);color:var(--err)">Unable to produce acceptable spirometry <kbd>⇧U</kbd></button></div><p class="sub" id="qStatus" role="status" style="margin:6px 0 0"></p><p class="sub" style="margin:6px 0 0">Tests performed marks the others not performed. The first two quality buttons set every performed test below to acceptable + repeatable, DLCO inspired volume ≥90% (unless a lower value is entered), and clear limitations; the filled button shows what is currently set. The red button makes the entire report one statement: unable to produce acceptable and reproducible spirometry, precluding interpretation, consider repeat testing. Undo is available.</p><p class="sub" id="unusableNote" hidden style="margin:6px 0 0;color:var(--err)">Statement-only report is ON. Findings below are kept but ignored. Click the red button again to restore them.</p>';
+ q.insertBefore(bar,q.children[1]);
+ document.getElementById('qAdequateHb').onclick=()=>quickQuality('yes');document.getElementById('qAdequateNoHb').onclick=()=>quickQuality('no');document.getElementById('qUnusable').onclick=toggleUnusable;
+ for(const [id,m] of [['tpSpiro','spiro'],['tpLV','spiro_lv'],['tpDLCO','spiro_dlco'],['tpFull','full']])document.getElementById(id).onclick=()=>setTests(m);
+ const nb=document.createElement('button');nb.className='btn';nb.id='btnNextReq';nb.type='button';nb.title='Jump to the next required item that is still unset (wraps around)';nb.innerHTML='Next required <kbd>⇧↵</kbd>';nb.onclick=nextRequired;document.getElementById('btnNew').before(nb);
+ const mh=document.querySelector('[data-sec="mech"] .card-h'),act=document.createElement('span');act.className='actions';
+ act.innerHTML='<button class="btn primary" id="btnNormalSpiroMech" type="button" title="Sets FVC, FEV1 and FEV1/FVC to normal, then moves to the bronchodilator row. Flow-volume loop is not changed.">Normal spirometry <kbd>⇧M</kbd></button>';
+ mh.appendChild(act);document.getElementById('btnNormalSpiroMech').onclick=normalSpiroValues;
+ for(const id of Object.keys(GRADE_KEYS)){
+  const row=document.querySelector('[data-row="'+id+'"]'),note=document.createElement('span');note.className='sub';note.id='grade_note_'+id;row.querySelector('.lbl').appendChild(note);
+  for(const g of ['mild','mod','sev']){
+   const b=row.querySelector('[data-v="dec_'+g+'"]'),hint=document.createElement('span'),wrap=document.createElement('span'),label=b.querySelector('.t');
+   hint.className='zc';hint.textContent=Z_RANGE[g].replace('z ','');wrap.className='tz';label.replaceWith(wrap);wrap.append(label,hint);
+   b.title=SEV_WORD[g][0].toUpperCase()+SEV_WORD[g].slice(1)+' reduction ('+Z_RANGE[g]+'). Selects "decreased" plus the modifier. An entered z-score overrides the button.';
+  }
+ }
+ for(const r of ROWS)if(r.optional)document.querySelector('[data-row="'+r.id+'"]').classList.add('optional-row');
+ const cn=document.createElement('span');cn.className='caveat-note';cn.id='lvr_caveat';cn.hidden=true;cn.textContent='⚠ Drives complex-restriction wording. Verify FVC is out of proportion to TLC.';document.querySelector('[data-row="lvRatios"] .lbl').appendChild(cn);
+ const tn=document.createElement('span');tn.className='sub';tn.id='tlc_early_note';tn.hidden=true;document.querySelector('[data-row="nearLv"] .lbl').appendChild(tn);
+ const panel=document.createElement('details');panel.className='card';panel.id='screenshotPanel';
+ panel.innerHTML='<summary class="card-h"><h2>PFT screenshot · manual cross-check</h2></summary><div style="padding:12px"><p class="sub">Local preview only: no OCR, no automated verification, nothing uploaded or stored. Remove identifiers first. Clearing the form removes it.</p><input id="pftImageFile" type="file" accept="image/png,image/jpeg,image/webp" aria-label="PFT screenshot"> <button class="btn" id="removePftImage" type="button">Remove</button> <label>Zoom <input id="imageZoom" type="range" min="50" max="250" value="100" step="10"></label><p id="imageStatus" role="status"></p><div style="max-height:60vh;overflow:auto"><img hidden id="pftPreview" alt="PFT screenshot for manual cross-check" style="width:100%;max-width:none"></div></div>';
+ document.querySelector('.output').prepend(panel);
+ document.getElementById('pftImageFile').onchange=e=>{const file=e.target.files[0];if(!file)return;clearPreview();if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>20*1024*1024){document.getElementById('imageStatus').textContent='Choose PNG, JPEG or WebP up to 20 MB.';return;}imageURL=URL.createObjectURL(file);const img=document.getElementById('pftPreview');img.onload=()=>{img.hidden=false;document.getElementById('imageStatus').textContent='Shown for your visual comparison only.';};img.onerror=()=>{clearPreview();document.getElementById('imageStatus').textContent='Image could not be read.';};img.src=imageURL;};
+ document.getElementById('removePftImage').onclick=clearPreview;document.getElementById('imageZoom').oninput=e=>document.getElementById('pftPreview').style.width=e.target.value+'%';window.addEventListener('beforeunload',clearPreview);
+}
+function renderWorkflow(){
+ for(const id of Object.keys(GRADE_KEYS)){const el=document.getElementById('grade_note_'+id);if(!el)continue;if(S.v[id]!=='dec'){el.textContent='';continue;}const c=gradeCode(id);el.textContent=c?SEV_WORD[c]+(Number.isFinite(S.z[id])?' · from z':' · manual'):'ungraded';}
+ const cl=clinical(),v=S.v;
+ const cav=document.getElementById('lvr_caveat');if(cav)cav.hidden=!cl.complex;
+ const tn=document.getElementById('tlc_early_note');
+ if(tn){const sel=earlyRestrictApplies(v,cl);tn.hidden=!(sel||(cl.pattern==='nonspecific'&&!v.unusableStudy));tn.textContent=sel?'TLC near LLN is adding: "'+EARLY_RESTRICT+'"':'Nonspecific pattern: marking TLC near LLN adds "'+EARLY_RESTRICT+'"';}
+ const on=!!v.unusableStudy,btn=document.getElementById('qUnusable');
+ if(btn){btn.setAttribute('aria-pressed',on?'true':'false');btn.classList.toggle('on',on);btn.style.background=on?'var(--err-bg)':'';document.getElementById('unusableNote').hidden=!on;}
+ const mode=testsMode(v);
+ for(const [id,m] of [['tpSpiro','spiro'],['tpLV','spiro_lv'],['tpDLCO','spiro_dlco'],['tpFull','full']]){const b=document.getElementById(id);if(b){const sel=mode===m;b.classList.toggle('primary',sel);b.setAttribute('aria-pressed',sel?'true':'false');}}
+ const dnp=v.dlco==='np',b1=document.getElementById('qAdequateHb'),b2=document.getElementById('qAdequateNoHb');
+ if(b1){const lab=dnp?'All adequate <kbd>⇧Q</kbd>':'All adequate · Hb adjusted <kbd>⇧Q</kbd>';if(b1.dataset.l!==lab){b1.innerHTML=lab;b1.dataset.l=lab;}b2.hidden=dnp;}
+ const yes=quickMatches('yes'),no=!dnp&&quickMatches('no');
+ for(const [id,sel] of [['qAdequateHb',yes],['qAdequateNoHb',no]]){const b=document.getElementById(id);if(b){b.classList.toggle('primary',sel);b.setAttribute('aria-pressed',sel?'true':'false');}}
+ const st=document.getElementById('qStatus');
+ if(st){
+  const anyQ=['q_pre','q_post','q_lv','q_dl','q_vi','q_hb','qGrade'].some(k=>v[k])||v.q_limits.length;
+  if(on)st.textContent='';
+  else if(yes||no)st.textContent='Currently set: all performed tests adequate'+(!dnp?' · Hb '+(yes?'adjusted':'not adjusted'):' (DLCO not performed)')+'.';
+  else st.textContent=anyQ?'Currently set: custom selections (see the rows below).':'';
+ }
+ const nr=document.getElementById('btnNextReq');
+ if(nr){const n=requiredIds().length,lab=(n?'Next required ('+n+')':'All required set')+' <kbd>⇧↵</kbd>';if(nr.dataset.l!==lab){nr.innerHTML=lab;nr.dataset.l=lab;}}
+ document.getElementById('inputs').classList.toggle('unusable-on',on);
+}
+
+/* init */
+buildDOM(); bind(); bindFidelity(); installWorkflow(); render(); setCur(ROWS.findIndex(r=>r.id==='fvc'), false);
+</script>
+</body>
+</html>
